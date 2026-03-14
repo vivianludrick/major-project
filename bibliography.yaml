@@ -1,0 +1,199 @@
+# Hayagriva format: https://github.com/typst/hayagriva/blob/main/docs/file-format.md
+liu2022:
+  type: Article
+  title: Effects of shellfish and macro-algae IMTA in North China on the environment, inorganic carbon system, organic carbon system, and sea-air CO₂ fluxes
+  author: ["Liu, Y.", "Zhang, J.", "Wu, W.", "Zhong, Y.", "Li, H.", "Wang, X.", "Yang, J.", "Zhang, Y."]
+  date: 2022-04
+  serial-number:
+    doi: "10.3389/fmars.2022.864306"
+  page-range: 864306
+  parent:
+    type: Periodical
+    title: Frontiers in Marine Science
+    volume: 9
+
+alam2024:
+  type: Article
+  title: Potential of integrated multitrophic aquaculture to make prawn farming sustainable in Bangladesh
+  author: ["Alam, M. M.", "Jørgensen, N. O. G.", "Bass, D.", "Karim, M. E.", "Haque, M. A.", "Hassan, M. M.", "Alam, M. J.", "Shah, M. S."]
+  date: 2024-10
+  serial-number:
+    doi: "10.3389/fsufs.2024.1412919"
+  page-range: 1412919
+  parent:
+    type: Periodical
+    title: Frontiers in Sustainable Food Systems
+    volume: 8
+
+ye2024:
+  type: Article
+  title: Analysis of influencing factors of carbon emissions from China's marine fishery energy consumption under different development scenarios
+  author: ["Ye, S."]
+  date: 2024-03
+  serial-number:
+    doi: "10.3389/fmars.2024.1377215"
+  page-range: 1377215
+  parent:
+    type: Periodical
+    title: Frontiers in Marine Science
+    volume: 11
+
+vinay2025:
+  type: Article
+  title: Multivariate analysis of water quality parameters for sustainable prawn farming
+  author: ["Vinay, M. T.", "Veeramanju, K. T.", "Sreenivasa, B. R."]
+  date: 2025
+  serial-number:
+    doi: "10.70135/seejph.vi.5814"
+  page-range: 3707-3719
+  parent:
+    type: Periodical
+    title: South Eastern European Journal of Public Health
+    volume: 26
+    issue: suppl. 2
+
+jiang2022:
+  type: Article
+  title: Aquaculture prediction model based on improved water quality parameter data prediction algorithm under the background of big data
+  author: ["Jiang, Y.", "Yan, F."]
+  date: 2022-11
+  serial-number:
+    doi: "10.1155 /2022/2071360"
+  page-range: 2071360
+  parent:
+    type: Periodical
+    title: Journal of Applied Mathematics
+    volume: 2022
+
+hala2024:
+  type: Article
+  title: "Life cycle assessment of integrated multi-trophic aquaculture: A review on methodology and challenges for its sustainability evaluation"
+  author: ["Hala, A. F.", "Chougule, K.", "Cunha, M. E.", "Mendes, M. C.", "Oliveira, I.", "Bradley, T.", "Forbes, J. A.", "Speranza, L. G."]
+  date: 2024-09
+  serial-number:
+    doi: "10.1016/ j.aquaculture.2024.741035"
+  page-range: 741035
+  parent:
+    type: Periodical
+    title: Aquaculture
+    volume: 565
+
+guo2024:
+  type: Article
+  title: Intelligent water quality prediction system with a hybrid CNN–LSTM model
+  author: ["Guo, H."]
+  date: 2024-11
+  page-range: 4538-4551
+  parent:
+    type: Periodical
+    title: Water Practice and Technology
+    volume: 19
+    issue: 11
+
+khan2024:
+  type: Article
+  title: Water quality prediction for smart aquaculture utilizing hybrid deep learning techniques
+  author: ["Khan, P. Y.", "Kumar, K. H."]
+  date: 2024-06
+  page-range: 319-327
+  parent:
+    type: Periodical
+    title: Journal of Emerging Technologies and Innovative Research
+    volume: 11
+    issue: 6
+
+hao2024:
+  type: Article
+  title: A dissolved oxygen prediction model based on GRU–N-Beats
+  author: ["Hao, Z.", "Li, Y.", "Dong, S.", "Gao, C.", "Tian, X."]
+  date: 2024-05
+  serial-number:
+    doi: "10.3389/fmars.2024.1365047"
+  page-range: 1365047
+  parent:
+    type: Periodical
+    title: Frontiers in Marine Science
+    volume: 11
+
+shete2024:
+  type: Article
+  title: IoT-enabled effective real-time water quality monitoring method for aquaculture
+  author: ["Shete, R. P.", "Gaikwad, V.", "Thorat, M.", "Lonkar, N.", "Kale, P.", "Deshmukh, N."]
+  date: 2024-08
+  serial-number:
+    doi: "10.1016/j.mex.2024.102883"
+  page-range: 102883
+  parent:
+    type: Periodical
+    title: MethodsX
+    volume: 13
+
+chen2022:
+  type: Article
+  title: Intelligent feeding technique based on predicting shrimp growth in recirculating aquaculture system
+  author: ["Chen, F.", "Sun, M.", "Du, Y.", "Xu, J.", "Zhou, L.", "Qiu, T.", "Sun, J."]
+  date: 2022-06
+  serial-number:
+    doi: "10.1111/are.15938"
+  page-range: 4401-4413
+  parent:
+    type: Periodical
+    title: Aquaculture Research
+    volume: 53
+    issue: 12
+
+kortet2024:
+  type: Article
+  title: Environmental benefits of integrated multi-trophic aquaculture through life cycle assessment
+  author: ["Kortet, S."]
+  date: 2024
+  page-range: 1-7
+  parent:
+    type: Periodical
+    title: Journal of Aquaculture Research & Development
+    volume: 15
+
+robinson2020:
+  type: Thesis
+  title: Unsupervised deep anomaly detection in a recirculating aquaculture system
+  author: ["Robinson, W."]
+  date: 2020
+  organization: University of Manitoba
+  location: Winnipeg, MB, Canada
+  genre: M.Sc. thesis
+
+massocato2022:
+  type: Article
+  title: "Growth, biofiltration and photosynthetic performance of Ulva spp. cultivated in fishpond effluents: An outdoor study"
+  author: ["Massocato, T. F.", "Robles-Carnero, V.", "Moreira, B. R.", "Castro-Varela, P.", "Pinheiro-Silva, L.", "da Silva Oliveira, W.", "Vega, J.", "Avilés, A.", "Bonomi-Barufi, J.", "Rörig, L. R.", "Figueroa, F. L."]
+  date: 2022-09
+  serial-number:
+    doi: "10.3389/fmars.2022.981468"
+  page-range: 981468
+  parent:
+    type: Periodical
+    title: Frontiers in Marine Science
+    volume: 9
+
+lawton2013:
+  type: Article
+  title: "Algal bioremediation of waste waters from land-based aquaculture using Ulva: Selecting target species and strains"
+  author: ["Lawton, R. J.", "Mata, L.", "de Nys, R.", "Paul, N. A."]
+  date: 2013-10
+  serial-number:
+    doi: "10.1371/journal.pone.0077344"
+  page-range: e77344
+  parent:
+    type: Periodical
+    title: PLoS ONE
+    volume: 8
+    issue: 10
+
+edf2022:
+  type: Report
+  title: Carbon sequestration by seaweed
+  author: ["Environmental Defense Fund"]
+  date: 2022-10
+  publisher: Environmental Defense Fund
+  url: "https://www.edf.org/sites/default/files/2022-10/Carbon%20Sequestration%20by%20Seaweed.pdf"
+  genre: White Paper
