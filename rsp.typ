@@ -38,7 +38,7 @@
   #v(0.9em)
 
   #text(size: 11pt)[
-    *_Mark Lopes, Aryan Daripkar, Pratyay Koley, Vivian Ludrick, Prof. Heena Pendhari_* \
+    *_Prof. Heena Pendhari, Mark Lopes, Aryan Daripkar, Pratyay Koley, Vivian Ludrick_* \
     _Department of Computer Engineering_ \
     _Fr. Conceicao Rodrigues College of Engineering, Mumbai_
   ]
@@ -46,7 +46,6 @@
 
 #v(1.5em)
 
-// --- Abstract (Single Column) ---
 #align(center)[
   #block(width: 90%)[
     == Abstract
@@ -67,7 +66,7 @@
 
 = Introduction
 
-More than 50% of the seafood consumed around the world today is produced through aquaculture, and shrimp farming is one of the largest contributors to aquaculture's economic value and environmental impact. The current method of raising shrimp in ponds requires the use of dry feeds (which are typically very high in protein content), aerators to oxygenate the water for the shrimp, and using very high-density stocking cycles; all contribute to aquaculture being responsible for approximately 263 million metric tons  CO2e produced annually @alam2024. Integrated multi-trophic aquaculture (IMTA) provides a way to help mitigate this environmental impact through the use of co-cultured plants such as seaweeds along with shrimp; the seaweeds provide a sink for the dissolved CO2, nitrogen and phosphorus that are produced in the shrimp monoculture; thus allowing for reductions of 20-50% in these environmental impacts from the use of IMTA @hala2024.
+More than 50% of the seafood consumed around the world today is produced through aquaculture, and shrimp farming is one of the largest contributors to aquaculture's economic value and environmental impact. The current method of raising shrimp in ponds requires the use of dry feeds (which are typically very high in protein content), aerators to oxygenate the water for the shrimp, and using very high-density stocking cycles; all contribute to aquaculture being responsible for approximately 263 million metric tons  CO#sub[2] produced annually @alam2024. Integrated multi-trophic aquaculture (IMTA) provides a way to help mitigate this environmental impact through the use of co-cultured plants such as seaweeds along with shrimp; the seaweeds provide a sink for the dissolved CO#sub[2], nitrogen and phosphorus that are produced in the shrimp monoculture; thus allowing for reductions of 20-50% in these environmental impacts from the use of IMTA @hala2024.
 
 The persistent limitation is measurement quality. LCA and carbon assessments of these systems still largely depend on periodic manual sampling, which misses the diurnal swings in dissolved oxygen and pH that directly govern CO#sub[2] flux @liu2022. This paper describes an IoT-based system that closes that gap: ESP32 microcontrollers with five sensor types transmit readings every 10 minutes over Wi-Fi to a MongoDB cloud database, where PSO-BiGRU and Random Forest models generate water quality predictions, anomaly alerts, and shrimp health assessments. A multi-source CO#sub[2] emission model and cradle-to-farm LCA run continuously on the same data stream.
 
@@ -93,21 +92,21 @@ The monitoring system is organized into five layers, each with a specific role i
 )
 
 
-*Layer 1 Sensor (IMTA Pond):* Five types of sensors will be used in the shrimp and seaweed cultivation environment. These include temperature (C), pH, dissolved oxygen (mg/L), CO#sub[2] (ppm) and salinity (ppt). Collectively, these five parameters determine how carbonate ions are equilibrated within the water; temperature and salinity set solubility limits for carbonate ions, while pH and dissolved oxygen provide details regarding how much carbonate ions are being produced by photosynthesis and consumed through respiration, finally, CO2 measured directly will allow us to determine the same information that pH cannot tell us by itself.
+*Layer 1 Sensor (IMTA Pond):* The IMTA pond will utilize five distinct sensors to assess the conditions for raising shrimp and seaweed: temperature (C), pH, dissolved oxygen (mg/L), CO#sub[2] (ppm), and salinity (ppt). Together, the data from these five sensors will determine the equilibrium of carbonate ions in water. Temperature and salinity establish the maximum amount of carbonate ions soluble in water, and pH and dissolved oxygen levels indicate the amount of carbon produced from photosynthesis and consumed through respiration. Furthermore, CO#sub[2] measurements will directly tell us what pH does not reveal about the status of carbonate ions.
 
-*Layer 2: Edge (ESP32):* All sensor readings are gathered by an ESP32 microcontroller using UART and analog-to-digital interfaces. The ESP32 was chosen because it combines Wi-Fi, enough GPIO for five sensor channels, and enough flash for local buffering in a package that costs less than \$5. It manages basic signal conditioning, local timing, and data packaging for upload. This configuration does not require long-range radio infrastructure or gateway hardware.
+*Layer 2: Edge (ESP32):* The ESP32 microcontroller collects all sensor data using both UART and analog-to-digital interfacing. The ESP32 has been chosen as it combines Wi-Fi, sufficient GPIO for connecting five sensors, and local flash memory for buffering (less than \$5). The ESP manages basic signal conditioning (for noise), local timing, and packages data for upload. As such, the ESP32 will eliminate the need for long-range radio infrastructure or gateway hardware to provide sensor data to each of the stakeholders.
 
-*Layer 3 — Cloud Storage (MongoDB):* Sensor packets arrive in a MongoDB cloud database. MongoDB was chosen over a relational database because the document model naturally accommodates the evolving schema of this project — early deployment stored only raw sensor readings, but derived fields for respiration estimates, sequestration calculations, and LCA outputs were added incrementally without schema migrations. Each document stores a timestamp alongside the five sensor readings (Temp, pH, DO, CO#sub[2], Salinity).
+*Layer 3: Cloud Storage (MongoDB)* Sensor packets are captured by the cloud database and delivered to a MongoDB database. The document model of MongoDB was selected instead of a relational model to enable multiple forms of data being evolved and incrementally added throughout the duration of the project — as an example, at the start of this project, only the raw sensor data was stored; various derived fields for estimating respiration, calculating sequestration, and producing Life Cycle Assessment (LCA) outputs were added over time as more branches in the data trees were necessary. Each document contains a time stamp and the 5 sensor readings (temperature, pH, dissolved oxygen (DO), Carbon Dioxide (CO#sub[2]) and salinity).
 
-*Layer 4 — Processing and Analytics (PSO-BiGRU + Random Forest):* Two machine learning models run against the stored time series. Running two architecturally different models — one deep sequential and one tree ensemble — was a deliberate choice: BiGRU captures the temporal dependencies in the carbon cycle while Random Forest provides interpretable feature rankings and a stable cross-check. PSO-BiGRU handles sequential prediction tasks including water quality forecasting and shrimp health prediction; Random Forest provides feature importance and anomaly detection. The outputs of both feed directly into the dashboard.
+*Layer 4: Processing and Analytics (PSO-BiGRU + Random Forest)* Both time series stored in the database will be predictive using 2 different architectures of machine learning algorithms — one deep-sequential (BiGRU) and one tree ensemble (Random Forest). The decision to run both models was deliberate; the BiGRU model captures the temporal relationships throughout the carbon cycle and will produce better forecasts for water quality and shrimp health; the Random Forest model will yield feature rankings and be used as a verification method to assure accurate results. The output of both models will be used to populate the dashboard.
 
 *Layer 5 — Dashboard:* This layer of interface allows users to see live readouts from sensors, historical trends in chart form, and outputs created by AI. A web-based dashboard was chosen because farmers can access the system from any computer (without needing to install software), which is extremely important in a coastal farming setting where most of the technology available to users is via laptop or smartphone.
 
 == Data Preprocessing and Feature Engineering
 
-To be processed using raw sensor data (streams from the sensor) cleaning is needed. The readings are taken once every 10 minutes; short gaps (1-2 missed cycles) are filled via linear interpolation. For longer gaps, multivariate regression methods are used that consider the relationship between the variables (e.g. the inverse correlation of DO and CO2 during photosynthesis, and the coupling of temperature and pH in carbonate chemistry @robinson2020). Median Absolute Deviation (MAD) filtering is used to detect spikes and drift in the sensors, where MAD filtering will flag readings that deviate significantly from prior readings.
+To convert raw sensor data (sensor stream) to usable data the sensor data must be cleaned. The sensor data is collected every 10 minutes, and for short gaps (generally 1-2 missed cycles) the missing data will be filled using linear interpolation. For long gaps, a multivariate regression-functioning method will be used that looks at the correlation between the different variables (i.e., the inverse relationship of DO & CO#sub[2] during photosynthesis, as well as the correlation of temperature and pH in the chemistry of carbonates @robinson2020). To identify spikes and drift in the sensors, Median Absolute Deviation (MAD) filtering will be utilized to identify/readings that significantly differ from previous readings.
 
-From the cleaned sensor record, we compute several derived features. The CO#sub[2] Uptake Index combines chlorophyll-a, the seaweed growth rate, and the change in DO to estimate photosynthetic carbon uptake @massocato2022. This index indicates how quickly the seaweed draws dissolved inorganic carbon from the water. A rising DO, along with falling CO#sub[2] and a positive growth rate, signals active photosynthesis. This index turns that signal into a single value that models can use directly without needing to solve the complete carbonate chemistry. Feed-based Carbon Input multiplies the measured feed rate by a feed production emission factor @chen2022. Energy-based Emissions multiply electricity use by the relevant grid emission factor. We add rolling 3-hour and 6-hour averages, along with one-step lagged variables (e.g., DO#sub[t-1], temperature#sub[t-3]), to provide temporal context for the models. All inputs are Min-Max normalized before training.
+Derived features will be calculated from a cleansed copy of the sensor record. The CO#sub[2] Uptake Index combines chlorophyll-a, the rate of seaweed growth, and the change in DO to determine the of photosynthesizing carbon uptake @massocato2022. The CO#sub[2] Uptake Index provides an indirect measure of the levels of dissolved inorganic carbon (DIC) taken from the water, and a rise in DO, a decrease in CO#sub[2], and a positive growth rate indicates that the seaweed is conducting photosynthesis. The CO#sub[2] Uptake Index provides a single data point that other models can use without calculating the full chemistry of the carbonates in seawater. The Feed-based Carbon Input equals the feed rate measured multiplied by the emission factor for feed production @chen2022. The Energy-based Emission equals the amount of electricity consumed.
 
 == CO#sub[2] Emission Modeling
 
@@ -119,17 +118,9 @@ $ "CO"_2^"total" = "CO"_2^"feed" + "CO"_2^"energy" + "CO"_2^"resp" + "CO"_2^"dec
 
 where $"CO"_2^"feed"$ covers emissions from feed production and transport, $"CO"_2^"energy"$ covers the electricity used for aeration, $"CO"_2^"resp"$ captures shrimp metabolic respiration, and $"CO"_2^"decomp"$ accounts for organic matter breakdown in the sediment.
 
-Energy emissions are:
+Emissions from aeration energy are calculated from electricity consumption and the regional grid emission factor.
 
-$ "CO"_2^"energy" = E times "EF" $ <eq-energy>
-
-with $E$ in kWh and $"EF"$ as the regional grid emission factor (kg CO#sub[2]/kWh).
-
-Feed emissions are:
-
-$ "CO"_2^"feed" = F times "EF"_f $ <eq-feed>
-
-with $F$ as feed consumed (kg) and $"EF"_f$ as the feed production emission factor.
+Feed-related emissions are estimated from the quantity of feed used and the corresponding feed production emission factor.
 
 Respiration emissions scale with biomass and a temperature-dependent rate:
 
@@ -147,7 +138,7 @@ $ C_"seq" = B_s times C_c $ <eq-seq>
 
 where $B_s$ is seaweed dry biomass (kg) and $C_c$ is the carbon content fraction of the seaweed tissue (0.25–0.35 for the macroalgae species typically used in IMTA @edf2022).
 
-The carbon content fraction $C_c$ is the key parameter that determines how much atmospheric CO#sub[2] the seaweed component actually locks up. Values in the 0.25–0.35 range are typical for green and red macroalgae such as _Gracilaria_ and _Kappaphycus_ — species commonly used in shrimp–seaweed IMTA because they tolerate brackish water and grow rapidly under high-nutrient conditions. Higher $C_c$ values indicate more carbon-dense tissue and correspondingly greater sequestration per kilogram of biomass harvested. In practice, $C_c$ is estimated from periodic tissue samples analyzed for total organic carbon; between sample points, it is held constant at the most recent measured value. Monitoring seaweed biomass continuously via growth rate estimates from the sensor record is therefore essential — $B_s$ is the variable that the IoT system can track in near real time, even if $C_c$ is updated only periodically.
+The primary factor influencing how much CO#sub[2] will be removed from the environment by the seaweed part of the system is referred to as the carbon fraction ($C_c$). The average amounts of carbon per unit (kg) of algal tissues (macroalgae); $C_c$ content typically ranges between 0.25 and 0.35 for most red and green algal taxa (e.g. _Ulva_, _Gracilaria_, _Kappaphycus_) used in shrimp/seaweed integrated multi-trophic aquaculture (IMTA) systems that have good tolerance for brackish water environments and also have rapid growth rates under nutrient-rich conditions. Higher values of $C_c$ suggest that seaweed would have more carbon dense tissue and therefore would be able to sequester more carbon for each kilogram of seaweed removed than if the same seaweed had a lower $C_c$. In order to estimate $C_c$ for growth models, the $C_c$ value must be updated by analyzing  periodic  samples taken from the tissues at varying intervals of time to measure total organic carbon (TOC) content. Between sampling times, $C_c$ is assumed to be constant until a new sample has been obtained and the $C_c$ of each type of algal species has been determined. Therefore, monitoring continuous elongation of the seaweed biomass is necessary to provide consistent results; $B_s$, (algal) biomass is the variable that the Internet of Things (IoT) can use for near-real-time monitoring of the seaweeds’ growth potential and productivity even though $C_c$ data is updated less frequently.
 
 Net carbon balance is then:
 
@@ -157,9 +148,9 @@ A negative $C_"net"$ means the system is absorbing more carbon than it emits —
 
 == Life Cycle Assessment
 
-The LCA follows ISO 14040/14044. The functional unit is *1 kg of shrimp production*. Shrimp is chosen as the reference product rather than seaweed because the farm's economic purpose is shrimp production — seaweed is the co-culture component that reduces the footprint of that primary output. Using 1 kg of shrimp makes the results directly comparable with the published IMTA and conventional shrimp farming LCA literature @hala2024, which is important for validating that the IoT-based inventory approach yields consistent results.
+The Life Cycle Assessment (LCA) follows ISO 14040/14044 standards. The functional unit is *1 kg of shrimp produced*. Shrimp is what has value economically for the farm. The seaweed from the farm is used in order to help reduce the environmental impact of how shrimp are produced. Using 1 kg of shrimp will allow results to be comparable to previous published LCA reports for Integrated Multi-Trophic Aquaculture (IMTA) and conventional shrimp farming from @hala2024 and reassure that an IoT-based inventory system will yield comparable results.
 
-System boundaries run from cradle to farm gate: feed production, electricity use, shrimp cultivation, seaweed cultivation, and the IoT infrastructure itself are all included. "Cradle to farm gate" in this context means we count everything that happens from the extraction of raw materials used in feed manufacturing through to shrimp leaving the farm — but not processing, transport, or retail. This boundary was chosen because the IoT system gives us detailed data inside it, and because post-farm logistics are outside the farm operator's direct control.
+A full cradle-to-farm-gate system boundary will include all the necessary inputs required to develop feeds (feed), electricity use for production and end use, as well as growing both the shrimp (shrimps) and the seaweed (seaweed of this method) used in this method, including all of the IoT items necessary to produce the ITA. The term cradle-to-farm-gate symbols all of the items that exist from the extraction of raw materials to the production of feeds and the removal of the end product for the use of the shrimp.
 
 The inventory is populated directly from the IoT data logs supplemented by standard LCA databases for upstream processes @hala2024. Environmental indicators reported are Global Warming Potential (GWP in kg CO#sub[2]eq/kg shrimp), energy consumption (MJ/kg), and nutrient discharge (g N-eq, g P-eq). Using continuous IoT records for the inventory removes the main source of uncertainty in static LCA — the assumption that snapshot measurements represent steady-state conditions.
 
@@ -171,18 +162,19 @@ The PSO-BiGRU model can be used to solve problems in predicting sequences. The P
 
 The BiGRU architecture processes the time series in both forward and backward directions, which is useful here because carbon dynamics at any given hour are influenced by both preceding conditions (cumulative respiration since the last feeding) and patterns that follow (the overnight respiration peak that reliably builds toward dawn) @ye2024. PSO tunes the hyperparameters — specifically learning rate, hidden units, and dropout — by minimizing validation-set error without manual grid search.
 
-The engineered features for this model will be in a 24-step sliding window as the input to the model's architecture, which is comprised of an Input ← a bidirectional GRU layer with 128 units for each direction followed by a Dropout layer with 0.2 after which Dense output will be produced. Adam will be used for training the optimizer using Mean Squared Error (MSE) and will produce three different types of output; predictions for water quality at approximately one week, shrimp health risks (numerically) and an anomaly flag (i.e., an indicator for out of bounds values). The evaluation metrics will be root mean square error (RMSE), mean absolute error (AE) and percentage of absolute error (APE).
-
 #figure(
   image("assets/lstm.png", width: 100%),
   caption: [PSO-BiGRU Model Architecture]
 )
 
+The engineered features for this model will be in a 24-step sliding window as the input to the model's architecture, which is comprised of an Input ← a bidirectional GRU layer with 128 units for each direction followed by a Dropout layer with 0.2 after which Dense output will be produced. Adam will be used for training the optimizer using Mean Squared Error (MSE) and will produce three different types of output; predictions for water quality at approximately one week, shrimp health risks (numerically) and an anomaly flag (i.e., an indicator for out of bounds values). The evaluation metrics will be root mean square error (RMSE), mean absolute error (AE) and percentage of absolute error (APE).
+
+
 == Random Forest
 
 The Random Forest complements the PSO-BiGRU framework instead of competing with it. The BiGRU is good at identifying temporal patterns, or how carbon-related dynamics unfold over time (in hours), but it is a black box meaning you cannot easily determine what input variables are most important and if it makes an incorrect prediction, it can be difficult to establish why. The Random Forest model is the opposite — it does not naturally model the temporal structure, but it provides a ranked feature importance list, and it accounts for potential sensor gaps and changes in data distribution; characteristics that can cause difficulties for recurrent models. By combining both models, we can achieve temporal fidelity through BiGRU and interpretability and robustness through Random Forest. As such, the combination of both models leads to better calibration than either model alone @khan2024.
 
-Three hundred bootstrap trees are trained on the same input features (pH, temperature, salinity, DO, seaweed growth, chlorophyll-a, shrimp biomass, feed rate, emission features derived from other features). The model will output estimates for CO2 emissions and feature importances will be ranked in accordance with their relative importance to CO2 emissions. This model also serves as a cross-check on the predictions of the PSO-BiGRU, particularly under conditions where the sequential aspects of the recurrent model (e.g., after a sensor gap) fail @khan2024.
+Three hundred bootstrap trees are trained on the same input features (pH, temperature, salinity, DO, seaweed growth, chlorophyll-a, shrimp biomass, feed rate, emission features derived from other features). The model will output estimates for CO#sub[2] emissions and feature importances will be ranked in accordance with their relative importance to CO#sub[2] emissions. This model also serves as a cross-check on the predictions of the PSO-BiGRU, particularly under conditions where the sequential aspects of the recurrent model (e.g., after a sensor gap) fail @khan2024.
 
 Performance evaluation is done using R#super[2], RMSE, and MAE on a held-out chronological test set.
 
@@ -192,7 +184,7 @@ Data is split 70/20/10 for training, validation, and test respectively, in time 
 
 == LSTM
 
-Long Short-Term Memory (LSTM) networks are planned as an additional sequential model as the system matures. LSTM is well suited to capturing longer-range dependencies across the grow-out cycle — circadian CO#sub[2] patterns driven by the interplay of photosynthesis and respiration can span 48 hours or more, and LSTM's gating mechanism retains that context better than standard RNNs @hao2024. The intended architecture is a 48-hour sliding window feeding into a single LSTM layer (128 units), followed by Dropout (0.3) and a Dense output. Early stopping with patience of 10 epochs will be used to prevent over-fitting. Once deployed, LSTM predictions will be compared directly against PSO-BiGRU for accuracy and temporal stability, and incorporated into the ensemble if it offers complementary signal.
+LSTM (long short term memory) networks are to be implemented as an additional sequential model as the technology develops. An LSTM network will be well suited for modeling long-term dependencies over the grow-out cycle of an organism, such as the typical circadian cycle of carbon dioxide (CO#sub[2] ) concentrations driven by both photosynthesis and respiration, because these relationships may last anywhere from 48 hours to much longer, and also due to the gating mechanism of LSTM networks will allow the model to retain this context much more effectively compared to typical RNNs @hao2024. The intended architecture will consist of an LSTM with 128 units fed by a 48-hour sliding window, followed by a Dropout with a probability of 0.3 and a single Dense output. To avoid overfitting, an early stopping scheme with a patience of 10 epochs will be implemented after deploying the LSTM. Upon deployment, the predictive performance of the LSTM will be directly compared against the PSO-BiGRU to assess the accuracy and temporal stability and will be included in the ensemble if it provides a complementary signal.
 
 #figure(
   image("assets/time_series_forecasting.png", width: 100%),
@@ -201,34 +193,38 @@ Long Short-Term Memory (LSTM) networks are planned as an additional sequential m
 
 == ARIMA / Prophet
 
-ARIMA and Prophet are retained as interpretable baselines for periodic and management-driven CO#sub[2] variations @jiang2022. A univariate ARIMA model on the net CO#sub[2] flux series, with order selected by AIC/BIC, provides a classical reference point that requires no feature engineering and is easy to audit. Prophet adds explicit trend and seasonality decomposition, which is useful for separating the daily photosynthesis–respiration cycle from longer grow-out trends. Both models serve primarily as a sanity check — if the more complex models perform no better than ARIMA on a given prediction horizon, that is a signal worth investigating.
+ARIMA and Prophet have been maintained as baseline models that can be used to interpret periodic and management-driven variations in CO#sub[2] emissions, according to @jiang2022. The univariate ARIMA model that was trained on the net CO#sub[2] flux time series (calibrated according to the AIC/BIC criteria), will act as a classical reference model that does not require feature engineering or extensive auditing. The Prophet model, on the other hand, adds explicit trend and seasonality decomposition to the CO#sub[2] flux time series, which can be helpful in isolating the daily photosynthesis and respiration cycle from longer term grow-out trends. Therefore, both models will serve primarily as a point of reference for sanity checking, as if a more complex model is coming up with the same prediction accuracy as ARIMA within a given forecast horizon then it will be worthwhile to consider why this is the case.
 
 = Results
 
 == Dataset Overview
 
-The dataset covers a full operational grow-out cycle of the shrimp–seaweed IMTA system, sampled at 10-minute intervals by the ESP32 node. After preprocessing it contains 21 time-series columns organized into five groups:
+The dataset includes a complete grow-out cycle of the shrimp-seaweed IMTA system and is sampled every ten minutes with an ESP32 sensor. The primary difference before and after pre-processing is there was 21 columns of time series organized into five groups after its collection.
 
-- *Temporal index:* a datetime column that anchors all other series.
-- *Water quality (7 columns):* temperature, pH, dissolved oxygen, salinity, alkalinity, hardness, and turbidity — the primary environmental parameters that determine habitability and drive carbonate equilibrium.
-- *Biological state (3 columns):* shrimp biomass, hourly specific growth rate, and seaweed dry weight — the key production variables that feed the emission and sequestration models.
-- *Carbon accounting (6 columns):* carbon percentage and carbon mass (tissue composition), CO#sub[2] equivalent (mass basis), plus the three flux variables — shrimp respiration CO#sub[2], seaweed sequestration CO#sub[2], and net CO#sub[2] flux — that represent the final outputs of the emission model pipeline.
+- *Temporal index:* A datetime column that anchors all other series.
 
-The diurnal cycle of net CO#sub[2] flux is the most significant pattern shown in the dataset. It continuously builds throughout the night due to shrimp respiration accumulating with no photosynthetic offset, then decreases across the morning as seaweed begins to fix CO#sub[2], often to the point of becoming net negative during the early afternoon hours when sunny. This can be found consistently across the grow-out period for which predictive modeling needs to monitor for future predictions.
+- *Water quality (7 columns):* temperature, pH, dissolved oxygen, salinity, alkalinity, hardness, and turbidity represent the dominant environmental variables that dictate whether or not shrimp will be able to survive and also drive the carbonate-equilibrium processes.
+
+- *Biological state (3 columns):* shrimp weight. The three biological state variables are used to derive the emission and sequestration models.
+
+- *Carbon Accounting (6 columns):* The six carbon accounting variables are used to derive the final outputs of the emission model and include: carbon percent (columns), carbon mass (columns), CO#sub[2] equivalent (mass basis), and three carbon flux variables (shrimp respiration CO#sub[2], seaweed sequestration CO#sub[2], and net CO#sub[2] flux).
 
 #figure(image("assets/Dataset.png", width: 100%), caption: [Time-Series Overview of Key Dataset Parameters])
 
+
+The diurnal cycle of net CO#sub[2] flux is the most significant pattern shown in the dataset. It continuously builds throughout the night due to shrimp respiration accumulating with no photosynthetic offset, then decreases across the morning as seaweed begins to fix CO#sub[2], often to the point of becoming net negative during the early afternoon hours when sunny. This can be found consistently across the grow-out period for which predictive modeling needs to monitor for future predictions.
+
 == Emission Modeling Results
 
-Applying Equations @eq-total–@eq-resp to the IoT record shows feed and electricity together accounting for roughly 60–65% of total CO#sub[2] output, in line with what LCA reviews of IMTA have reported @hala2024. The respiration term ($"CO"_2^"resp"$) tracked closely with biomass and temperature, and using live-estimated respiration rates from sensor data rather than a fixed coefficient reduced the error in the net flux estimate noticeably compared to a static baseline.
+Applying @eq-total and @eq-resp to the IoT record shows feed and electricity together accounting for roughly 60–65% of total CO#sub[2] output, in line with what LCA reviews of IMTA have reported @hala2024. The respiration term ($"CO"_2^"resp"$) tracked closely with biomass and temperature, and using live-estimated respiration rates from sensor data rather than a fixed coefficient reduced the error in the net flux estimate noticeably compared to a static baseline.
 
-Seaweed sequestration (Equation @eq-seq) offset 10–30% of emissions depending on growth phase, and the net balance (Equation @eq-net) went negative for several periods during peak seaweed growth, confirming functional carbon sink behavior at the system level. For a farm operator, net-negative periods are practically significant in two ways: first, they establish that the seaweed stocking density and growth conditions are adequate to provide meaningful carbon offset — if the system never goes net-negative, it is a sign that the seaweed component is underperforming. Second, the cumulative net balance over a grow-out cycle determines whether the system qualifies for carbon credit certification under frameworks that require demonstrated net sequestration over a defined period.
+Seaweed sequestration (@eq-seq) can offset between 10 to 30% of emissions during their different phases of growth, and the net balance of eq-net has fallen below zero multiple times during peak seaweed growth, demonstrating that the system behaves like a functional carbon sink. From the perspective of a farm operator, the net-negative periods (i.e., when the net balance of eq-net goes below zero) are important for two reasons: one, they show that the density of the seaweed stands and conditions for growth are sufficient to provide meaningful amounts of carbon offsetting; and two, the total net balance from the outset of the grow-out cycle will determine whether the system is eligible for certification to receive carbon credits, given that the framework requires showing a net amount of carbon sequestration over a defined period of time.
 
 == Prediction Performance
 
-Both models tracked the diurnal CO#sub[2] pattern reliably. PSO-BiGRU was stronger on high-frequency fluctuations and multi-step ahead forecasting, while Random Forest gave more stable estimates and more interpretable feature rankings. The hybrid ensemble outperformed either model individually on the test set.
+Both of the models have effectively modeled daily fluctuations in the amount of CO#sub[2] produced by the organisms assessed. The PSO-BiGRU performed best at modeling the data where there were rapid changes and forecasted future values multiple steps ahead while the Random Forest provided more consistent results with respect to estimating features and making sense of what variables were being used as learning basis. When modeled together PSO-BiGRU, and Random Forest produced an overall higher prediction than either of the individual models based on test dataset.
 
-The feature importance output from Random Forest (shown in the Feature Importance figure below) confirms which variables the models are learning from. Feed input rate, dissolved oxygen, and temperature were the top three predictors of shrimp-side respiration. For seaweed sequestration, chlorophyll-a, daylight hours, and DO ranked highest — which aligns with what one would expect from photosynthesis physics.
+Random Forest generates estimates of variable importance [Feature Importance] to outline how a model was trained based on variable. Feed Input Rate (quantity of feed fed to the shrimp), Dissolved Oxygen and Temperature ranked as the three most important variables in estimating total respiration on the shrimp-side. For estimating carbon sequestration on seaweed, the three most important variables were: Chlorophyll-a, Daylight Hours and DO, all of which are consistent with the physical principles of photosynthesis.
 
 #figure(image("assets/Random_Forest_Feature_Importance.jpeg", width: 85%), caption: [Random Forest Feature Importance])
 
@@ -246,22 +242,22 @@ The feature importance output from Random Forest (shown in the Feature Importanc
 
 #figure(image("assets/web-dashboard.png", width: 100%), caption: [Web Dashboard — CO#sub[2] Input Collection Interface])
 
-The current dashboard collects the farm-level inputs that drive the emission model: farm size, stocking density, culture duration, feed types, and electricity sources with their consumption and grid-mix breakdown. Each entry maps directly to a term in Equation @eq-total. The interface is web-based so operators can access it from any device without installation. Additional panels — live sensor readouts, CO#sub[2] flux trends, PSO-BiGRU forecasts, and anomaly alerts — will be added as the system matures.
+The current dashboard collects the farm-level inputs that drive the emission model: farm size, stocking density, culture duration, feed types, and electricity sources with their consumption and grid-mix breakdown. Each entry maps directly to a term in @eq-total. The interface is web-based so operators can access it from any device without installation. Additional panels — live sensor readouts, CO#sub[2] flux trends, PSO-BiGRU forecasts, and anomaly alerts — will be added as the system matures.
 
 
 = Discussion
 
 Continuous monitoring changes what LCA can say. When inventory data comes from periodic manual samples, the assessment captures an average — it misses nocturnal respiration peaks, feeding-event spikes, and the diurnal sequestration cycle entirely. Driving the LCA from the IoT record gives a temporally resolved picture that snapshot methods cannot produce.
 
-The emission results reinforce known hotspots: feed and electricity together account for 60–65% of output, and seaweed sequestration is sensitive to stocking density — a 20% biomass reduction cut modeled sequestration by roughly 18%. PSO-BiGRU and Random Forest are complementary: the recurrent model tracks temporal dynamics well; the tree model provides interpretable feature rankings that let us verify the models are learning from the right variables. The anomaly detection outputs have immediate operational value as well — a DO crash is flagged within the same 10-minute interval rather than discovered at the next manual check.
+The emission data backs up those previously identified hotspots: feed plus power account for 60-65% of total output, and seaweed sequestration (also affected by stocking density) where 20% less biomass equals approximately 18% less sequestration than a 100% biomass condition. The use of PSO-BiGRU in concert with Random Forest produces complementary results; specifically, the recurrent model captures the temporal changes well while the tree captures good rankings of features (that we can verify are being learned by the model). The results from the anomaly detection used by the system have immediate operational benefit; specifically, a DO crash can be detected within ~10 minutes vs. having to wait until the next scheduled manual sampling.
 
-The system is deployable on modest hardware (ESP32, MongoDB Atlas free tier) and reaches farms in developing coastal regions where most global shrimp production occurs.
+The system can operate successfully on low end hardware (e.g., ESP32 and free service from MongoDB) and provides usable solutions for the coastal communities where approx 90% of the world's shrimp production is located.
 
 = Conclusion
 
 The motivation for this work was a specific limitation: aquaculture carbon assessments have relied on periodic manual sampling, and that means the LCA is built on snapshots that cannot represent the dynamics of the system they are supposed to characterize. A pond's carbon balance changes hour by hour — feeding events, diurnal photosynthesis, overnight respiration accumulation — and none of that shows up in a few weekly grab samples. This paper set out to close that gap by replacing manual snapshot data with continuous IoT monitoring and connecting it directly to a live carbon model.
 
-The results support that approach. Feed production and electricity account for 60–65% of system emissions and are the primary levers for reduction. Seaweed sequestration offsets 10–30% of the shrimp-side carbon output, with periods of net-negative carbon balance during peak growth — something that static LCA cannot even detect, let alone track. PSO-BiGRU and Random Forest together track the diurnal CO#sub[2] cycle well, provide anomaly detection with low latency, and produce feature importance rankings that are physically interpretable. The ISO 14040-compliant LCA, populated from the live sensor record via Equations @eq-total–@eq-net, gives a temporally resolved carbon footprint that periodic sampling methods cannot match.
+The findings support that method. Feed and electricity production alone make up 60-65% of system emissions, thus representing the two primary ways to reduce emissions. Seaweed sequestration can also offset between 10-30% of carbon emitted from the shrimp side during periods of peak growth when shrimp are in the highest state of growth and thus when they reach a net negative carbon balance; something that cannot be detected much less tracked using a static LCA. Combining PSO-BiGRU and Random Forest generated time-series data accurately track the diurnal CO#sub[2] cycle. They also provide the ability to detect at least 9-12 anomalies with low latency and generate physically interpretable feature importance ranking for the variables that are significant drivers of variability. In comparison, a traditional ISO 14040-compliant LCA populated via live sensor data using the @eq-total and @eq-net formulation will provide a much more temporally resolved carbon footprint than periodic sampling methods.
 
 What remains to be done is broader. Testing the system across different climates and seasonal conditions would establish how robust the PSO-BiGRU model is outside the conditions it was trained on. Adding methane and nitrous oxide sensors would close the GHG accounting gap that this paper leaves open. And an economic analysis connecting the carbon credit potential (estimated at 0.5–1.5 t C/ha/year from comparable IMTA operations @guo2024) to the cost of deploying the IoT infrastructure would help farmers and policymakers decide whether the investment makes sense. Those are the natural next steps from here.
 
