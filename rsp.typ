@@ -67,23 +67,28 @@
 
 = Introduction
 
-Aquaculture now supplies more than half of all seafood consumed globally, and demand keeps rising. Shrimp farming in particular has grown into one of the most economically important sectors, but it comes with a disproportionate environmental cost. Aerating ponds around the clock, manufacturing high-protein feeds, and managing dense stocking densities all drive significant greenhouse gas emissions — aquaculture as a whole produces around 263 million tonnes of CO#sub[2] equivalents per year, and shrimp sits near the top of that figure @alam2024.
+Aquaculture now supplies more than half of all seafood consumed globally, and shrimp farming is among its most economically significant — and environmentally costly — sectors. Aerating ponds, manufacturing high-protein feeds, and running dense stocking cycles produce around 263 million tonnes of CO#sub[2] equivalents per year across aquaculture as a whole @alam2024. Integrated Multi-Trophic Aquaculture (IMTA) addresses this by co-cultivating shrimp with seaweed, where the seaweed absorbs the dissolved CO#sub[2], nitrogen, and phosphorus that shrimp release — cutting environmental impacts by 20–50% relative to monoculture @hala2024.
 
-One of the more practical responses to this problem is Integrated Multi-Trophic Aquaculture (IMTA). The idea is straightforward: instead of growing one species in isolation, you combine species from different trophic levels so that the waste from one becomes a resource for another. In shrimp–seaweed IMTA, seaweed absorbs the dissolved CO#sub[2], nitrogen, and phosphorus that shrimp metabolic activity releases, reducing both the nutrient discharge and the carbon footprint of the system @hala2024. Studies have found that IMTA can cut environmental impacts by 20–50% relative to conventional monoculture, and that seaweed alone can sequester 10–30% of the CO#sub[2] produced on the shrimp side @hala2024.
+The persistent limitation is measurement quality. LCA and carbon assessments of these systems still largely depend on periodic manual sampling, which misses the diurnal swings in dissolved oxygen and pH that directly govern CO#sub[2] flux @liu2022. This paper describes an IoT-based system that closes that gap: ESP32 microcontrollers with five sensor types transmit readings every 10 minutes over Wi-Fi to a MongoDB cloud database, where PSO-BiGRU and Random Forest models generate water quality predictions, anomaly alerts, and shrimp health assessments. A multi-source CO#sub[2] emission model and cradle-to-farm LCA run continuously on the same data stream.
 
-The persistent limitation is measurement. Most published assessments of IMTA carbon dynamics still rely on infrequent manual sampling — someone goes out to the pond a few times a week, collects water, and sends it to a lab. That approach misses the diurnal swings in dissolved oxygen and pH that directly govern CO#sub[2] flux, and it means any Life Cycle Assessment (LCA) built on that data is working with averages that may not reflect what is actually happening in the water @liu2022. Real-time continuous monitoring would solve this, but translating raw sensor streams into reliable carbon estimates requires more than just hardware.
-
-This paper describes a system that puts those pieces together. An ESP32-based sensor network collects temperature, pH, dissolved oxygen, CO#sub[2], and salinity readings continuously from a shrimp–seaweed IMTA pond. The data moves over Wi-Fi to a MongoDB cloud database, where PSO-optimized BiGRU and Random Forest models produce water quality predictions, anomaly alerts, and shrimp health assessments. A mathematical CO#sub[2] emission model and ISO 14040-compliant LCA run on top of the same data stream, giving operators a live view of net carbon balance.
-
-The specific contributions of this work are as follows. First, we deploy and characterize a five-layer IoT monitoring architecture tuned to the needs of an IMTA environment. Second, we formulate a multi-source CO#sub[2] emission model with terms for feed, energy, respiration, and decomposition, calibrated from continuous sensor data rather than static assumptions. Third, we quantify seaweed sequestration using IoT-tracked biomass, and compute net carbon balance from Equations that directly reference sensor outputs. Fourth, we implement PSO-BiGRU and Random Forest models and compare their performance on water quality prediction and anomaly detection. Fifth, we conduct a cradle-to-farm LCA whose inventory is populated from the live IoT record.
+The key contributions are: (i) a five-layer IoT architecture for IMTA carbon monitoring; (ii) a mathematical emission model calibrated from live sensor data; (iii) seaweed sequestration quantification via IoT-tracked biomass; (iv) PSO-BiGRU and Random Forest model evaluation for water quality prediction and anomaly detection; and (v) a dynamic LCA whose inventory is populated from the continuous sensor record rather than static assumptions.
 
 = Research Gap
 
-The core limitation in existing IMTA sustainability work is the reliance on static, infrequent measurements as inputs to otherwise sophisticated models. LCA studies of IMTA have done a good job identifying feed and energy as the dominant emission hotspots @hala2024, and machine learning has been applied to water quality prediction with solid results @ye2024 @guo2024. What has not been done is to bring these two threads together into a single operational system — one where continuous IoT data feeds both a predictive model and a live LCA, and where the outputs are visible to farm operators in real time. That is the gap this paper targets.
+Most assessments of aquaculture sustainability, including LCA studies of IMTA, are built on static datasets — a handful of field samples averaged into a single inventory entry. This approach has been good enough to identify that feed production and energy use are the dominant emission hotspots @hala2024, but it cannot say much about how those emissions behave across a day, or how seaweed sequestration responds to temperature and light variation, or when a DO crash is about to happen. The data simply is not there.
+
+Machine learning has been applied to water quality prediction in aquaculture with solid results. Ye @ye2024 used PSO-BiGRU to predict carbon emissions in marine fisheries; Vinay et al. @vinay2025 achieved 93.26% accuracy on prawn water quality with PCA and Random Forest; Guo @guo2024 demonstrated hybrid CNN-LSTM models for water quality forecasting. What none of these studies do is connect continuous sensor monitoring directly to a live LCA and make the outputs available to farm operators in real time.
+
+That is the gap this paper addresses. The system described here does not just predict — it accounts. Every 10-minute sensor reading flows through an emission model and sequestration estimate, updating the cumulative carbon balance as the grow-out cycle progresses. LCA is no longer a post-harvest calculation done in a spreadsheet; it runs alongside the farm. That shift from static to continuous carbon accounting, coupled with predictive models that give operators early warning of adverse conditions, is the central contribution of this work.
 
 = Proposed System Framework
 
 == Architecture
+
+#figure(
+  image("assets/architecture_diagram.jpg", width: 100%),
+  caption: [System Architecture: IMTA Pond → ESP32 → MongoDB → PSO-BiGRU/RF → Dashboard]
+)
 
 The monitoring system is organized into five layers, each with a specific role in moving data from the pond to actionable outputs on a dashboard.
 
@@ -97,14 +102,9 @@ The monitoring system is organized into five layers, each with a specific role i
 
 *Layer 5 — Dashboard:* The presentation layer shows live sensor readouts, historical trend charts, and the AI-generated outputs. Operators can see current conditions, projected near-term values, and any active anomaly alerts from a single interface.
 
-#figure(
-  image("assets/architecture_diagram.jpg", width: 100%),
-  caption: [System Architecture: IMTA Pond → ESP32 → MongoDB → PSO-BiGRU/RF → Dashboard]
-)
-
 == Data Preprocessing and Feature Engineering
 
-Raw sensor streams require cleaning before use. Short gaps in the time series (\<3 hours) are filled by linear interpolation; longer gaps use multivariate regression that respects known relationships between variables — for instance the inverse correlation between DO and CO#sub[2] under photosynthesis, or the temperature-pH coupling in carbonate chemistry @robinson2020. Spikes and sensor drift are caught by Median Absolute Deviation (MAD) filtering, which flags readings that deviate abnormally from their local window.
+Raw sensor streams require cleaning before use. Readings are collected at 10-minute intervals; short gaps of one or two missed cycles are filled by linear interpolation, while longer gaps use multivariate regression that respects known relationships between variables — for instance the inverse correlation between DO and CO#sub[2] under photosynthesis, or the temperature-pH coupling in carbonate chemistry @robinson2020. Spikes and sensor drift are caught by Median Absolute Deviation (MAD) filtering, which flags readings that deviate abnormally from their local window.
 
 From the cleaned sensor record, several derived features are computed. The CO#sub[2] Uptake Index combines chlorophyll-a, seaweed growth rate, and the change in DO to approximate photosynthetic carbon uptake @massocato2022. Feed-based Carbon Input multiplies the measured feed rate by a feed production emission factor @chen2022. Energy-based Emissions multiply electricity draw by the applicable grid emission factor. Rolling 3-hour and 6-hour averages and one-step lagged variables (e.g., DO#sub[t-1], temperature#sub[t-3]) are added to give the models temporal context. All inputs are Min-Max normalized before training.
 
@@ -177,11 +177,19 @@ Performance is evaluated with R#super[2], RMSE, and MAE on a held-out chronologi
 
 Data is split 70/20/10 chronologically — training, validation, and test, in time order — to reflect genuine forward prediction rather than interpolation. Rolling forecast evaluation then re-fits on an expanding window to assess how performance degrades over longer prediction horizons. The final output used by the dashboard is a weighted ensemble of PSO-BiGRU and Random Forest predictions, with weights set by inverse validation-set RMSE.
 
+== LSTM
+
+Long Short-Term Memory (LSTM) networks are planned as an additional sequential model as the system matures. LSTM is well suited to capturing longer-range dependencies across the grow-out cycle — circadian CO#sub[2] patterns driven by the interplay of photosynthesis and respiration can span 48 hours or more, and LSTM's gating mechanism retains that context better than standard RNNs @hao2024. The intended architecture is a 48-hour sliding window feeding into a single LSTM layer (128 units), followed by Dropout (0.3) and a Dense output. Early stopping with patience of 10 epochs will be used to prevent over-fitting. Once deployed, LSTM predictions will be compared directly against PSO-BiGRU for accuracy and temporal stability, and incorporated into the ensemble if it offers complementary signal.
+
+== ARIMA / Prophet
+
+ARIMA and Prophet are retained as interpretable baselines for periodic and management-driven CO#sub[2] variations @jiang2022. A univariate ARIMA model on the net CO#sub[2] flux series, with order selected by AIC/BIC, provides a classical reference point that requires no feature engineering and is easy to audit. Prophet adds explicit trend and seasonality decomposition, which is useful for separating the daily photosynthesis–respiration cycle from longer grow-out trends. Both models serve primarily as a sanity check — if the more complex models perform no better than ARIMA on a given prediction horizon, that is a signal worth investigating.
+
 = Results
 
 == Dataset Overview
 
-The dataset covers a full operational grow-out cycle of the shrimp–seaweed IMTA system, sampled at 1–5 minute intervals by the ESP32 node. After preprocessing it contains 21 time-series columns: a datetime index, seven water quality parameters (temperature, pH, DO, salinity, alkalinity, hardness, turbidity), four nutrient parameters (NH#sub[3], NO#sub[2], NO#sub[3], PO#sub[4]), three biological parameters (shrimp biomass, hourly specific growth rate, seaweed dry weight), three carbon composition fields (carbon percentage, carbon mass, CO#sub[2] equivalent), and three carbon flux variables (shrimp respiration CO#sub[2], seaweed sequestration CO#sub[2], net CO#sub[2] flux).
+The dataset covers a full operational grow-out cycle of the shrimp–seaweed IMTA system, sampled at 10-minute intervals by the ESP32 node. After preprocessing it contains 21 time-series columns: a datetime index, seven water quality parameters (temperature, pH, DO, salinity, alkalinity, hardness, turbidity), four nutrient parameters (NH#sub[3], NO#sub[2], NO#sub[3], PO#sub[4]), three biological parameters (shrimp biomass, hourly specific growth rate, seaweed dry weight), three carbon composition fields (carbon percentage, carbon mass, CO#sub[2] equivalent), and three carbon flux variables (shrimp respiration CO#sub[2], seaweed sequestration CO#sub[2], net CO#sub[2] flux).
 
 The most important pattern in the dataset is the diurnal cycle of net CO#sub[2] flux. It rises overnight as shrimp respiration accumulates without photosynthetic offset, then drops through the morning as seaweed begins fixing carbon, often turning net-negative in the early afternoon on sunny days. This cycle was consistent across the grow-out period and is the primary pattern the predictive models need to track.
 
@@ -210,6 +218,14 @@ The feature importance output from Random Forest is shown in Figure 4. Feed inpu
 #figure(image("assets/BiGRU_Results.png", width: 100%), caption: [PSO-BiGRU Prediction Results])
 
 #figure(image("assets/BiGRU_Performance.png", width: 100%), caption: [PSO-BiGRU Performance Metrics])
+
+== Web Dashboard
+
+The dashboard provides the primary interface between the system and farm operators. Its current implementation focuses on CO#sub[2] input collection for the LCA pipeline. Users enter farm-level parameters — farm size (km#super[2]), stocking density (shrimp/km#super[2]) from which total shrimps stocked is derived automatically, and culture duration in days. Feed information is submitted by uploading feed type records (supporting multiple feed types to cover mixed feeding regimes). Electricity sources are configured with source type, daily consumption in kWh, and a percentage share slider that allows the energy mix to be split across grid, solar, diesel, or other sources. A submit action passes this data into the emission model pipeline, while a clear function resets all fields for a new run.
+
+#figure(image("assets/web-dashboard.png", width: 100%), caption: [Web Dashboard — CO#sub[2] Input Collection Interface])
+
+The dashboard is designed to expand as development progresses. Future additions will include live sensor readout panels, real-time CO#sub[2] flux visualizations, PSO-BiGRU forecast charts, anomaly alert feeds, and cumulative LCA carbon balance summaries — bringing together the full monitoring and prediction pipeline into a single operator-facing view.
 
 = Discussion
 
