@@ -68,9 +68,8 @@
 
 More than 50% of the seafood consumed around the world today is produced through aquaculture, and shrimp farming is one of the largest contributors to aquaculture's economic value and environmental impact. The current method of raising shrimp in ponds requires the use of dry feeds (which are typically very high in protein content), aerators to oxygenate the water for the shrimp, and using very high-density stocking cycles; all contribute to aquaculture being responsible for approximately 263 million metric tons  CO#sub[2] produced annually @alam2024. Integrated multi-trophic aquaculture (IMTA) provides a way to help mitigate this environmental impact through the use of co-cultured plants such as seaweeds along with shrimp; the seaweeds provide a sink for the dissolved CO#sub[2], nitrogen and phosphorus that are produced in the shrimp monoculture; thus allowing for reductions of 20-50% in these environmental impacts from the use of IMTA @hala2024.
 
-The persistent limitation is measurement quality. LCA and carbon assessments of these systems still largely depend on periodic manual sampling, which misses the diurnal swings in dissolved oxygen and pH that directly govern CO#sub[2] flux @liu2022. This paper describes an IoT-based system that closes that gap: ESP32 microcontrollers with five sensor types transmit readings every 10 minutes over Wi-Fi to a MongoDB cloud database, where PSO-BiGRU and Random Forest models generate water quality predictions, anomaly alerts, and shrimp health assessments. A multi-source CO#sub[2] emission model and cradle-to-farm LCA run continuously on the same data stream.
+A barrier to continually estimating the carbon footprint of aquaculture facilities is the quality of the measurement process. The LCA and carbon assessments conducted in these systems rely on periodic manual sampling, which does not capture the daily variations of dissolved oxygen and pH that are responsible for regulating CO#sub[2] flux @liu2022. This paper describes an IoT-based system that effectively fills this gap: an ESP32 microcontroller combined with five types of sensors sends data every ten minutes via Wi-Fi to a MongoDB cloud database where the PSO-BiGRU and Random Forest models each can produce predictions about water quality, detect anomalies, and make assessments of shrimp health. At the same time, the multi-source CO#sub[2] emission model and the cradle-to-farm LCA are generated continuously using this same data stream, replacing static snapshots with time-based data that describes the evolving nature of the carbon footprint throughout the grow-out period.
 
-The contributions of this work fall into three areas. On the hardware and data side, we present a five-layer IoT architecture that generates continuous, 10-minute-resolution records of the five key pond parameters, and a mathematical CO#sub[2] emission model whose coefficients are drawn from those live readings rather than from literature averages. On the modeling side, we evaluate PSO-BiGRU and Random Forest for water quality prediction, shrimp health assessment, and anomaly detection, and show that an ensemble of the two outperforms either model alone. And on the LCA side, we demonstrate a cradle-to-farm assessment whose inventory is populated dynamically from the sensor record — replacing the static snapshot with a temporally resolved carbon footprint that changes as the grow-out cycle progresses.
 
 = Research Gap
 
@@ -82,25 +81,33 @@ That connection is what this paper provides. Every 10-minute sensor reading flow
 
 = Proposed System Framework
 
+== IMTA System Overview
+
+In an integrated multi-trophic aquaculture (IMTA) system, _Litopenaeus vannamei_ shrimp are raised on the bottom of a shared pond and _Ulva lactuca_ seaweed is grown in the top layer, as shown in @fig-imta-flow. As the shrimp eat the feed given to them, they produce excretions (metabolites) that contain high levels of nitrogen and phosphorus. The excreted dissolved nutrients then vertically migrate from the bottom to the top of the pond, where the seaweed can use them as direct nutrients. By using photosynthesis to convert carbon dioxide into oxygen, the seaweed provides supplemental oxygen to the shrimp by increasing dissolved oxygen levels at the bottom. Constant flowing water moves all animals through the same nutrient pool. Upon harvesting, the seaweed is harvested as a secondary crop while the entire cycle of nutrient and carbon transfer is monitored by the IoT network of sensors described below.
+
+#figure(
+  image("assets/IMTA_flow.png", width: 100%),
+  caption: [IMTA System: Shrimp & Ulva Shared Pond Flow Diagram],
+) <fig-imta-flow>
+
 == Architecture
 
 The monitoring system is organized into five layers, each with a specific role in moving data from the pond to actionable outputs on a dashboard.
-
-#figure(
-  image("assets/architecture_diagram.jpg", width: 100%),
-  caption: [System Architecture]
-)
-
 
 *Layer 1 Sensor (IMTA Pond):* The IMTA pond will utilize five distinct sensors to assess the conditions for raising shrimp and seaweed: temperature (C), pH, dissolved oxygen (mg/L), CO#sub[2] (ppm), and salinity (ppt). Together, the data from these five sensors will determine the equilibrium of carbonate ions in water. Temperature and salinity establish the maximum amount of carbonate ions soluble in water, and pH and dissolved oxygen levels indicate the amount of carbon produced from photosynthesis and consumed through respiration. Furthermore, CO#sub[2] measurements will directly tell us what pH does not reveal about the status of carbonate ions.
 
 *Layer 2: Edge (ESP32):* The ESP32 microcontroller collects all sensor data using both UART and analog-to-digital interfacing. The ESP32 has been chosen as it combines Wi-Fi, sufficient GPIO for connecting five sensors, and local flash memory for buffering (less than \$5). The ESP manages basic signal conditioning (for noise), local timing, and packages data for upload. As such, the ESP32 will eliminate the need for long-range radio infrastructure or gateway hardware to provide sensor data to each of the stakeholders.
 
-*Layer 3: Cloud Storage (MongoDB)* Sensor packets are captured by the cloud database and delivered to a MongoDB database. The document model of MongoDB was selected instead of a relational model to enable multiple forms of data being evolved and incrementally added throughout the duration of the project — as an example, at the start of this project, only the raw sensor data was stored; various derived fields for estimating respiration, calculating sequestration, and producing Life Cycle Assessment (LCA) outputs were added over time as more branches in the data trees were necessary. Each document contains a time stamp and the 5 sensor readings (temperature, pH, dissolved oxygen (DO), Carbon Dioxide (CO#sub[2]) and salinity).
+*Layer 3: Cloud Storage (MongoDB)* Sensor packets are stored in a MongoDB document database. Each document contains a timestamp and the five sensor readings (temperature, pH, DO, CO#sub[2], salinity); the schema-flexible document model allows derived fields (respiration estimates, sequestration values, LCA outputs) to be added incrementally as the analysis pipeline grows.
 
-*Layer 4: Processing and Analytics (PSO-BiGRU + Random Forest)* Both time series stored in the database will be predictive using 2 different architectures of machine learning algorithms — one deep-sequential (BiGRU) and one tree ensemble (Random Forest). The decision to run both models was deliberate; the BiGRU model captures the temporal relationships throughout the carbon cycle and will produce better forecasts for water quality and shrimp health; the Random Forest model will yield feature rankings and be used as a verification method to assure accurate results. The output of both models will be used to populate the dashboard.
+*Layer 4: Processing and Analytics (PSO-BiGRU + Random Forest)* Sensor time series are processed by two complementary models: a BiGRU for temporal forecasting and a Random Forest for feature-ranked cross-validation. Their ensemble outputs populate the dashboard.
 
 *Layer 5 — Dashboard:* This layer of interface allows users to see live readouts from sensors, historical trends in chart form, and outputs created by AI. A web-based dashboard was chosen because farmers can access the system from any computer (without needing to install software), which is extremely important in a coastal farming setting where most of the technology available to users is via laptop or smartphone.
+
+#figure(
+  image("assets/architecture_diagram.jpg", width: 100%),
+  caption: [System Architecture]
+)
 
 == Data Preprocessing and Feature Engineering
 
@@ -138,7 +145,7 @@ $ C_"seq" = B_s times C_c $ <eq-seq>
 
 where $B_s$ is seaweed dry biomass (kg) and $C_c$ is the carbon content fraction of the seaweed tissue (0.25–0.35 for the macroalgae species typically used in IMTA @edf2022).
 
-The primary factor influencing how much CO#sub[2] will be removed from the environment by the seaweed part of the system is referred to as the carbon fraction ($C_c$). The average amounts of carbon per unit (kg) of algal tissues (macroalgae); $C_c$ content typically ranges between 0.25 and 0.35 for most red and green algal taxa (e.g. _Ulva_, _Gracilaria_, _Kappaphycus_) used in shrimp/seaweed integrated multi-trophic aquaculture (IMTA) systems that have good tolerance for brackish water environments and also have rapid growth rates under nutrient-rich conditions. Higher values of $C_c$ suggest that seaweed would have more carbon dense tissue and therefore would be able to sequester more carbon for each kilogram of seaweed removed than if the same seaweed had a lower $C_c$. In order to estimate $C_c$ for growth models, the $C_c$ value must be updated by analyzing  periodic  samples taken from the tissues at varying intervals of time to measure total organic carbon (TOC) content. Between sampling times, $C_c$ is assumed to be constant until a new sample has been obtained and the $C_c$ of each type of algal species has been determined. Therefore, monitoring continuous elongation of the seaweed biomass is necessary to provide consistent results; $B_s$, (algal) biomass is the variable that the Internet of Things (IoT) can use for near-real-time monitoring of the seaweeds’ growth potential and productivity even though $C_c$ data is updated less frequently.
+Periodic tissue samples are used to update the carbon fraction $C_c$ based on total organic carbon analysis and the carbon fraction $C_c$ is held constant between sampling events. The carbon fraction $C_c$ changes slowly so the biomass $B_s$ is the variable that continuous IoT monitoring is monitoring; real-time biomass estimates will provide an up-to-date estimate of the sequestration term even if tissue sampling has not been performed again yet.
 
 Net carbon balance is then:
 
@@ -158,7 +165,7 @@ The inventory is populated directly from the IoT data logs supplemented by stand
 
 == PSO-BiGRU
 
-The PSO-BiGRU model can be used to solve problems in predicting sequences. The PSO component of the model optimizes the hyperparameters (the parameters that define how deep learning models learn) of the BiGRU by utilizing an optimization algorithm inspired by natural phenomena in which flocks of birds search for food. Instead of manually testing the learning rate, size of hidden layers, and dropout percentage for the BiGRU, the PSO allows for population search through a collection of different-sized populations of candidate hyperparameter sets (referred to as "particles") within the entire search space of the model. Each particle keeps track of its own individual optimum as well as the overall swarm's best (global) optimum and, when all particles are done running through the model, converge on an optimal solution (i.e., synchronous movement towards the best particle). The combination of being able to arrive at an optimal solution much more quickly than could be done through a more conventional exhaustive search approach, as well as avoiding the manual trial and error process that typically takes a large amount of time to develop a model is what makes the PSO component of the model advantageous
+The PSO-BiGRU model couples a swarm-based hyperparameter optimizer with a bidirectional recurrent architecture for sequence prediction. PSO searches the space of learning rate, hidden-unit count, and dropout by running a population of candidate configurations ("particles") that converge toward the global optimum, eliminating manual grid search.
 
 The BiGRU architecture processes the time series in both forward and backward directions, which is useful here because carbon dynamics at any given hour are influenced by both preceding conditions (cumulative respiration since the last feeding) and patterns that follow (the overnight respiration peak that reliably builds toward dawn) @ye2024. PSO tunes the hyperparameters — specifically learning rate, hidden units, and dropout — by minimizing validation-set error without manual grid search.
 
@@ -257,7 +264,7 @@ The system can operate successfully on low end hardware (e.g., ESP32 and free se
 
 The motivation for this work was a specific limitation: aquaculture carbon assessments have relied on periodic manual sampling, and that means the LCA is built on snapshots that cannot represent the dynamics of the system they are supposed to characterize. A pond's carbon balance changes hour by hour — feeding events, diurnal photosynthesis, overnight respiration accumulation — and none of that shows up in a few weekly grab samples. This paper set out to close that gap by replacing manual snapshot data with continuous IoT monitoring and connecting it directly to a live carbon model.
 
-The findings support that method. Feed and electricity production alone make up 60-65% of system emissions, thus representing the two primary ways to reduce emissions. Seaweed sequestration can also offset between 10-30% of carbon emitted from the shrimp side during periods of peak growth when shrimp are in the highest state of growth and thus when they reach a net negative carbon balance; something that cannot be detected much less tracked using a static LCA. Combining PSO-BiGRU and Random Forest generated time-series data accurately track the diurnal CO#sub[2] cycle. They also provide the ability to detect at least 9-12 anomalies with low latency and generate physically interpretable feature importance ranking for the variables that are significant drivers of variability. In comparison, a traditional ISO 14040-compliant LCA populated via live sensor data using the @eq-total and @eq-net formulation will provide a much more temporally resolved carbon footprint than periodic sampling methods.
+The findings support that method. Feed and electricity dominate system emissions (60–65%), seaweed sequestration offsets 10–30% during peak growth and can push the net balance below zero — an outcome invisible to static LCA. The PSO-BiGRU and Random Forest ensemble accurately tracks the diurnal CO#sub[2] cycle, detects anomalies with low latency, and produces interpretable feature rankings. Live-sensor inventory via @eq-total and @eq-net yields a temporally resolved carbon footprint that periodic sampling cannot provide.
 
 What remains to be done is broader. Testing the system across different climates and seasonal conditions would establish how robust the PSO-BiGRU model is outside the conditions it was trained on. Adding methane and nitrous oxide sensors would close the GHG accounting gap that this paper leaves open. And an economic analysis connecting the carbon credit potential (estimated at 0.5–1.5 t C/ha/year from comparable IMTA operations @guo2024) to the cost of deploying the IoT infrastructure would help farmers and policymakers decide whether the investment makes sense. Those are the natural next steps from here.
 
