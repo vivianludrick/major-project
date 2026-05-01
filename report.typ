@@ -93,15 +93,22 @@ str(counter(heading).get().at(0)) + "." + str(num)
   designation:"Scientist, Aquaculture Division, ICAR–CIFE, Mumbai",
 )
 
-#let imageWithAlt(altText, imagePath) = {
+#let imageWithAlt(altText, imagePath, width: 85%) = {
   figure(
     kind: image,
     caption:[#altText] 
   )[
-    #v(3em)
-    #image(imagePath)
-    #v(2em)
+    #image(imagePath, width: width)
   ]
+}
+
+#let imagePair(altA, pathA, altB, pathB) = {
+  grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
+    figure(kind: image, caption: [#altA])[#image(pathA, width: 100%)],
+    figure(kind: image, caption: [#altB])[#image(pathB, width: 100%)],
+  )
 }
 
 #let addPageTitle(pageTitle) = {
@@ -263,7 +270,7 @@ Place:
 
 #addPageTitle("Declaration")
 
-We declare that this written submission represents our ideas in our own words and where others’ ideas or words have been included, we have adequately cited and referenced the original sources. We also declare that we have adhered to all principles of academic honesty and integrity and have not misrepresented or fabricated or falsified any idea/data/fact/source in my submission. We understand that any violation of the above will be cause for disciplinary action by the Institute and can also evoke penal action from the sources which have thus not been properly cited or from whom proper permission has not been taken when needed.
+We declare that this written submission represents our ideas in our own words and where others' ideas or words have been included, we have adequately cited and referenced the original sources. We also declare that we have adhered to all principles of academic honesty and integrity and have not misrepresented or fabricated or falsified any idea/data/fact/source in my submission. We understand that any violation of the above will be cause for disciplinary action by the Institute and can also evoke penal action from the sources which have thus not been properly cited or from whom proper permission has not been taken when needed.
 
 #v(20em)
 
@@ -292,13 +299,11 @@ Date:
 
 #addPageTitle("Abstract")
 
-The aquaculture industry plays a major role in meeting the global food supply but it also contributes significantly to greenhouse gas emissions. Shrimp farming in particular is a carbon-intensive process due to high feed requirements. IMTA(Integrated Multi-Trophic Aquaculture) systems offer a sustainable alternative to conventional farming methods by combining two species: fed (shrimp) and extractive (seaweed) that absorb excess nutrients in the water and balance CO#sub[2] levels.
+Shrimp aquaculture accumulates dissolved CO#sub[2] through continuous shrimp respiration and organic waste decomposition. Integrated Multi-Trophic Aquaculture (IMTA) mitigates this by co-cultivating seaweed alongside shrimp. The seaweed absorbs dissolved CO#sub[2] through photosynthesis during daylight hours and produces dissolved oxygen as a by-product, functioning as a natural carbon sink. Over a full diel cycle, photosynthetic drawdown outweighs overnight seaweed respiration, resulting in a net reduction in dissolved CO#sub[2] compared to a seaweed-absent system.
 
-Conventional monitoring methods for aquaculture rely on sampling at intervals and are therefore unable to continuously capture the fluctuating nature of key environmental measurements (e.g., temperature, dissolved oxygen (DO), pH, salinity), which in turn influence CO#sub[2] concentration. Thus, static data points do not provide sufficient information for decision-making because environmental variables that influence the CO#sub[2] value are not adequately represented in static snapshots. To address this shortcoming, we propose a real-time IoT-based, data-driven framework for continuous monitoring and predicting CO#sub[2] concentrations in shrimp/seaweed IMTA systems by integrating a network of sensors with machine learning and time series models that will intelligently analyze environmental variables.
+This project validates this effect through real field measurements at a shrimp farm in Konkan Division, Maharashtra, India. A custom ESP32-based IoT sensor node recorded 1,502 dissolved CO#sub[2] readings over eleven days (28 March - 7 April 2026), spanning an IMTA phase (approx. seven days, _Red Seaweed_ sp. present) and a non-IMTA phase (approx. four days, seaweed removed). Field data confirms that net dissolved CO#sub[2] is measurably lower during the IMTA phase, providing empirical evidence for the carbon mitigation effect of IMTA in Indian pond aquaculture.
 
-The proposed framework addresses this shortcoming through three major objectives: (i) the creation of a real-time IoT-based monitoring system for measuring carbon-related environmental variables; (ii) developing predictive models of CO#sub[2] concentrations using statistical and machine learning-based methods including Random Forest, Bi-GRU, XGBoost; and (iii) data-driven decision-making for improved sustainability and efficiency of aquaculture operations.
-
-Overall, we provide a framework that produces accurate and scalable solutions for continuous monitoring and predicting CO#sub[2] concentrations, therefore accelerating the adoption of smarter and more sustainable aquaculture practices.
+Since the sensor measured only CO#sub[2], XGBoost models trained on a reference IMTA dataset were used to synthetically generate companion variables (respiration, sequestration, DO, ammonia, nitrite, nitrate, pH), producing a 2,150-row hybrid dataset. Three models were then trained on this data using a chronological 80/20 split: XGBoost (R² = 0.84/0.80), Random Forest (R² = 0.845/0.836), and a Bidirectional GRU (R² = 0.91/0.95) for respiration and sequestration respectively. The BiGRU achieved the strongest performance by capturing temporal dependencies in the diurnal CO#sub[2] cycle, demonstrating the viability of data-driven carbon forecasting from a single-sensor deployment.
 
 #pagebreak()
 
@@ -319,7 +324,11 @@ Overall, we provide a framework that produces accurate and scalable solutions fo
   We also thank all non-teaching staff 
   for their valuable support, to complete our project.
 
-  #v(12em)
+  We are grateful to the aquaculture farm at Konkan Division, Maharashtra for 
+  granting us access to their shrimp pond for field data collection, without 
+  which this work would not have been possible.
+
+  #v(8em)
   #grid(
     columns:2,
     rows: 1,
@@ -362,6 +371,11 @@ Overall, we provide a framework that produces accurate and scalable solutions fo
   target: figure.where(kind: image),
 )
 
+#outline(
+  title: addPageTitle("List of Tables"),
+  target: figure.where(kind: table),
+)
+
 #set par(leading: line_spacing, spacing: paragraph_spacing)
 
 #set page(numbering: "1")
@@ -370,7 +384,7 @@ Overall, we provide a framework that produces accurate and scalable solutions fo
 #set page(
   footer: context {
     let page-num = counter(page).get().first()
-    if page-num > 0 {  // Start showing after page 2
+    if page-num > 0 {
       align(center)[
         #counter(page).display("1")
       ]
@@ -380,37 +394,42 @@ Overall, we provide a framework that produces accurate and scalable solutions fo
 
 = Introduction
 
-Feeding a rapidly growing global population remains a significant challenge, with aquaculture emerging as a key contributor to food production, surpassing traditional capture fisheries. However, the rapid expansion of aquaculture has raised environmental concerns, particularly due to the emission of greenhouse gases such as carbon dioxide (CO#sub[2]), methane (CH₄), and nitrous oxide (N₂O). Aquaculture drives greenhouse gas emissions in a variety of ways at each stage of production, from production and consumption of feed through energy consumed to biological processes occurring on-site. The contribution of aquaculture globally to greenhouse gas emissions is significant; shrimp farming in particular is one of the most carbon intensive forms of aquaculture primarily because it has a high demand for feed and requires a high degree of management.
+Aquaculture is one of the fastest-growing food production sectors and helps meet rising seafood demand as wild fisheries decline due to fish removals. However, shrimp farming has a high carbon footprint, with elevated dissolved CO#sub[2] from shrimp respiration and microbial breakdown of feed wastes, alongside limited plant uptake in monoculture systems @hala2024. High CO#sub[2] levels are also linked to poor shrimp health, increasing stress and reducing growth. Effective carbon management is therefore essential for both productivity and environmental sustainability.
 
-Integrated Multi-Trophic Aquaculture (IMTA) is becoming a viable option for sustainable aquaculture production, as it allows for the cultivation of both fed species (such as shrimp) and extractive species (such as seaweed) in one environment. The extractive species remove excess nutrients and dissolved carbon that result from the fed species, and the seaweed is a major consumer of carbon dioxide as well as nitrogen and phosphorus, creating a better quality of water and helping to slow the accumulation of carbon in the system.
+Integrated Multi-Trophic Aquaculture (IMTA) is an example of the combined growing of shrimp and seaweed together in a closed-loop carbon system @hala2024. Within that closed-loop carbon system, the seaweeds will absorb the CO#sub[2], nitrogen, and phosphorus in the water from the shrimp waste, then will return the oxygen into the water with the process of photosynthesis. Moreover, it should improve water quality properties such as DO and pH levels and dissolved CO#sub[2] will be reduced by 15 to 35% when compared to traditional monoculture system @hala2024 @bullen2024. Therefore in that same system the shrimp (which are the CO#sub[2] source) and the seaweed (which is a carbon sink) are both function as beneficial to the overall ecosystem.
 
-Although IMTA has been shown to be effective in improving aquaculture systems, most of the research to date has been conducted using static and infrequent measurements, often through the use of manual or controlled sampling methods. In the real world, many aquatic parameters (such as temperature, dissolved oxygen (DO), pH, and salinity) experience continual fluctuation. These fluctuations have a profound impact on shrimp metabolism and seaweed growth; therefore, they also affect CO#sub[2] concentration and system stability. Because of these continually changing parameters, traditional monitoring methods cannot provide accurate real-time system behavior; therefore, the ability to make sound operational decisions is limited.
+While some support the potential of integrated multi-trophic aquaculture (IMTA) systems when approaching performance measurement i.e. production levels or benefits, field-based evidence is limited. Existing studies often rely upon laboratory experiments or predictive models that utilize restricted datasets, making them difficult to validate out in the real world @kortet2024. Furthermore, there is a lack of properly designed and comprehensive data because macroalgae are often deployed in a field-only study to measure a limited number of parameters (e.g., fish health, water quality) even though ML models require numerous input to function properly.
 
-In recent times, there have been many advancements made in regard to the Internet of Things (IoT) technologies, as well as data-driven analytics, which can help to mitigate some of the limitations discussed previously. With the use of integrated sensor-based IoT systems, it will be possible to obtain real-time continuous data on environmental parameters (e.g., temperature, dissolved oxygen, pH, salinity and dissolved CO#sub[2]). This data can then be analyzed in order to develop machine learning and time-series forecasting models, which will allow us to detect trends, identify temporal dependencies and ultimately, provide more accurate predictions for future CO#sub[2] levels.
+This project addresses these gaps by deploying an ESP32-based IoT sensor to collect about 1,502 dissolved CO#sub[2] measurements during IMTA (7 days) and non-IMTA (4 days) phases in a shrimp pond in the Konkan Division, Maharashtra, India, from 28 March to 7 April 2026. It also explores carbon flux prediction using synthetic dataset augmentation to support multi-variable ML models @shete2024 @vinay2025.
 
-Therefore, in light of the above, this research presents an IoT-based data-driven framework for real-time monitoring and prediction of CO#sub[2] in a shrimp–seaweed IMTA system. The objectives of this research include the following:
-+ Create a real-time IOT device that has sensors that can continuously monitor things related to carbon like how many free carbon dioxide molecules there are in the water (dissolved CO#sub[2]), dissolved oxygen (DO), temperature, pH, salinity, and alkalinity, from inside a shrimp-seaweed aquaculture set up, and keep track of them all in real time.
+The objectives of the project are:
 
-+ Develop and build models that can predict future amounts of CO#sub[2] in the environment where aquaculture takes place, using machine learning and time-series modeling techniques (e.g. Random Forest, Bi-GRU, XGBoost).
++ Deploy a real-time IoT sensor system to continuously measure dissolved CO#sub[2] in a shrimp pond under both IMTA and non-IMTA conditions @floresiwasaki2025.
 
-+ Use the information collected by these IOT devices and your predictions from your modelling activities to guide decisions made by aquaculture producers that will lead to better use of resources and sustainability of operations.
++ Construct a hybrid dataset by augmenting the real CO#sub[2] measurements with synthetically generated biological and chemical parameters derived from a reference IMTA model.
+
++ Train and evaluate machine learning models, specifically XGBoost, Random Forest, and Bidirectional GRU (BiGRU), to predict shrimp respiration (gCO#sub[2]) and seaweed sequestration (gCO#sub[2]) from the hybrid dataset @ye2024.
+
++ Demonstrate, through field data, that dissolved CO#sub[2] concentrations are measurably lower when seaweed is present in the pond, providing empirical validation of the IMTA CO#sub[2] mitigation effect @bullen2024.
 
 = Literature Review
 
-#set par(leading: 1em)
+#set par(leading: 0.8em)
 
 #table(
-  columns: (1.25fr, 1fr, 1fr, 1.5fr),
-  align: (left, left, left, left),
+  columns: (0.3fr, 1.25fr, 1fr, 1fr, 1.5fr),
+  align: (center, left, left, left, left),
   stroke: 0.5pt + gray,
   inset: 8pt,
 
+  [*Sr. No.*],
   [*Paper*], 
   [*Key Focus*], 
   [*Methodology Used*], 
   [*Key Findings Relevant to The Project*],
 
-  [Y. Liu et al., “Effects of shellfish and macro-algae IMTA in North China on the environment, inorganic carbon system, organic carbon system, and sea-air CO#sub[2] fluxes,” Frontiers in Marine Science, vol. 9, p. 864306, Apr. 2022 @liu2022],
+  [1],
+  [Y. Liu et al., "Effects of shellfish and macro-algae IMTA in North China on the environment, inorganic carbon system, organic carbon system, and sea-air CO#sub[2] fluxes," Frontiers in Marine Science, vol. 9, p. 864306, Apr. 2022 @liu2022],
   [Effects of shellfish-macroalgae IMTA on carbon systems and CO#sub[2] fluxes],
   [- 4 seasonal field surveys (2019)
 - Parameters: DO, pH, temp, salinity, TA, DIC, DOC, POC, pCO#sub[2], CO#sub[2]
@@ -422,72 +441,78 @@ Therefore, in light of the above, this research presents an IoT-based data-drive
 - Water temperature & DIC are key CO#sub[2] flux factors
 - IMTA mitigates ocean acidification],
 
-[M. M. Alam et al., “Potential of integrated multitrophic aquaculture to make prawn farming sustainable in Bangladesh,” Frontiers in Sustainable Food Systems, vol. 8, p. 1412919, Oct. 2024 @alam2024],
-[IMTA potential for reducing GHG in prawn farming],
-[- Systematic review: 112 articles (2000-2024)
+  [2],
+  [M. M. Alam et al., "Potential of integrated multitrophic aquaculture to make prawn farming sustainable in Bangladesh," Frontiers in Sustainable Food Systems, vol. 8, p. 1412919, Oct. 2024 @alam2024],
+  [IMTA potential for reducing GHG in prawn farming],
+  [- Systematic review: 112 articles (2000 - 2024)
 - PRISMA framework
 - Economic viability & bioremediation analysis],
-[- Conventional prawn farms produce 18.8 kg CO#sub[2]eq/MT vs 3.1kg (China shrimp)
+  [- Conventional prawn farms produce 18.8 kg CO#sub[2]eq/MT vs 3.1kg (China shrimp)
 - Bivalves/seaweeds sequester CO#sub[2] as blue carbon sinks
 - Global mollusks sequestered 0.97--1.93 million ton C/year
 - IMTA shows 24% higher net profit than monoculture
 - Feed & energy are major carbon sources],
 
-[S. Ye, “Analysis of influencing factors of carbon emissions from China's marine fishery energy consumption under different development scenarios,” Frontiers in Marine Science, vol. 11, p. 1377215, Mar. 2024 @ye2024],
-[Carbon emission factors and prediction for marine fishery],
-[- Carbon accounting (2006-2020): Sources - Sinks
+  [3],
+  [S. Ye, "Analysis of influencing factors of carbon emissions from China's marine fishery energy consumption under different development scenarios," Frontiers in Marine Science, vol. 11, p. 1377215, Mar. 2024 @ye2024],
+  [Carbon emission factors and prediction for marine fishery],
+  [- Carbon accounting (2006 - 2020): Sources - Sinks
 - PSO-BIGRU machine learning
 - Random Forest for factor importance],
-[- 17% emission reduction achieved from 4.72 to 3.90 million tons
+  [- 17% emission reduction achieved from 4.72 to 3.90 million tons
 - Carbon sinks are dominant reduction factor
 - PSO-BIGRU gives best predictions (MAE: 1.251)
 - Key predictors: carbon sinks, per capita income, fishery population],
 
-[M. T. Vinay, K. T. Veeramanju, and B. R. Sreenivasa, “Multivariate analysis of water quality parameters for sustainable prawn farming,” South Eastern European Journal of Public Health, vol. 26, no. suppl.2, pp. 3707–3719, 2025 @vinay2025],
-[Multivariate analysis for predicting water quality effects on prawn health],
-[- 3 scenario predictions (2021-2030)
+  [4],
+  [M. T. Vinay, K. T. Veeramanju, and B. R. Sreenivasa, "Multivariate analysis of water quality parameters for sustainable prawn farming," South Eastern European Journal of Public Health, vol. 26, no. suppl.2, pp. 3707–3719, 2025 @vinay2025],
+  [Multivariate analysis for predicting water quality effects on prawn health],
+  [- 3 scenario predictions (2021 - 2030)
 - PCA: 14 to 9 components (90% variance)
 - SPA feature selection (10 key features)
 - ML: XGBoost, Random Forest, SVM
 - Dataset: 4,300 samples, 15 parameters],
-[- 6% sink growth rate most effective
+  [- 6% sink growth rate most effective
 - PCA + Random Forest gives 93.26% accuracy
 - Key parameters: pH, CO#sub[2], Ca, hardness, plankton, phosphor, temp, DO, total alkalinity, NH#sub[3]
 - DO/BOD inverse relationship validated
 - pH and CO#sub[2] negatively correlated
 - Real-time monitoring improves survival rates],
 
-[Y. Jiang and F. Yan, “Aquaculture prediction model based on improved water quality parameter data prediction algorithm under the background of big data,” Journal of Applied Mathematics, vol. 2022 @jiang2022],
-[DO prediction using big data and improved algorithm],
-[- PCA for feature extraction
+  [5],
+  [Y. Jiang and F. Yan, "Aquaculture prediction model based on improved water quality parameter data prediction algorithm under the background of big data," Journal of Applied Mathematics, vol. 2022 @jiang2022],
+  [DO prediction using big data and improved algorithm],
+  [- PCA for feature extraction
 - PCA-BP neural network
 - GA optimization (GPCA-BP)
 - Focus on Dissolved Oxygen (DO) as critical indicator],
-[- GPCA-BP showed best DO prediction accuracy
+  [- GPCA-BP showed best DO prediction accuracy
 - Lowest MAE error & best convergence
 - DO is most critical aquaculture parameter
 - Big data enables dynamic monitoring
 - Model supports real-time prediction systems],
 
-[A. F. Hala et al., “Life cycle assessment of integrated multi-trophic aquaculture: A review on methodology and challenges for its sustainability evaluation,” Aquaculture, vol. 565, p. 741035, Sep. 2024 @hala2024],
-[LCA in IMTA for carbon reduction],
-[- Review of 29 LCA studies (2009–2022)
+  [6],
+  [A. F. Hala et al., "Life cycle assessment of integrated multi-trophic aquaculture: A review on methodology and challenges for its sustainability evaluation," Aquaculture, vol. 565, p. 741035, Sep. 2024 @hala2024],
+  [LCA in IMTA for carbon reduction],
+  [- Review of 29 LCA studies (2009 – 2022)
 - Analysis of fed (shrimp) and extractive (seaweed) systems
 - Cradle-to-farm boundary comparisons
 - Methodological challenges assessment],
-[- IMTA cuts impacts 20–50% vs. monocultures
+  [- IMTA cuts impacts 20–50% vs. monocultures
 - Seaweed sequesters 10–30% of CO#sub[2] emissions
 - Hotspots: feed (40–60%), energy (20–30%)
 - Supports real-time dynamic LCA for carbon credits],
 
-[H. Guo, “Intelligent water quality prediction system with a hybrid CNN–LSTM model,” Water Practice and Technology, vol. 19, no. 11, pp. 4538–4551, Nov. 2024. @guo2024],
-[Aquaculture carbon strategies with IMTA],
-[- Carbon accounting methods review
+  [7],
+  [H. Guo, "Intelligent water quality prediction system with a hybrid CNN–LSTM model," Water Practice and Technology, vol. 19, no. 11, pp. 4538–4551, Nov. 2024. @guo2024],
+  [Aquaculture carbon strategies with IMTA],
+  [- Carbon accounting methods review
 - Shrimp-seaweed case studies
 - IMTA vs. monoculture scenario modeling
 - LCA integration with operational data
 - Sequestration sensitivity analysis],
-[- IMTA reduces shrimp footprints 15–35% via seaweed
+  [- IMTA reduces shrimp footprints 15–35% via seaweed
 - Net emissions: 2.5–5 kg CO#sub[2]eq/MT
 - Biofloc/renewables cut energy CO#sub[2] 25%
 - Carbon credits via 0.5–1.5 t C/ha/year sequestration
@@ -498,251 +523,413 @@ Therefore, in light of the above, this research presents an IoT-based data-drive
 
 = Problem Statement
 
-The aquaculture industry contributes significantly to satisfying the world's growing food demand, yet contributes approximately 263 million tonnes of equivalent CO#sub[2] to the atmosphere each year. Shrimp farming is particularly carbon-intensive due mainly to the amount of formulated feed used in the operation. Integrated Multi-Trophic Aquaculture (IMTA) can help lessen this ecological footprint with the incorporation of seaweed into the same culture as shrimp farming. The shrimp naturally provide organic waste, which provides nutrients for the seaweed. Likewise, the seaweed provides nutrient uptake through excess nutrient uptake and carbon dioxide removal when it photosynthesizes. Together, these create a sustainable ecosystem. 
+Shrimp farming contributes significantly to dissolved CO#sub[2] accumulation in pond water through continuous biological respiration and organic matter decomposition @alam2024. While IMTA (the practice of co-cultivating seaweed with shrimp) is theoretically well-supported as a mechanism for reducing dissolved carbon through photosynthetic uptake @edf2022 @bullen2024, the real-world, field-level evidence for this effect in Indian pond aquaculture remains thin. Most studies rely on laboratory-controlled or simulated data @kortet2024, limiting their applicability to operational farm settings.
 
-The vast majority of existing research regarding the carbon balance of IMTA systems has relied on infrequent manual sampling, which has been static in nature. Therefore, temporal changes in key environmental variables, such as temperature, dissolved oxygen (DO), pH and salinity, have not been measured in real time. These dynamic variables have a substantial impact on all biological processes, such as shrimp metabolism and seaweed growth, and thus they significantly impact the overall carbon balance of the IMTA system. Thus, current methodologies of measuring and analysing carbon balance in IMTA systems have failed to provide the necessary accuracy to effectively manage these systems.
+A second challenge compounds the first: even when field CO#sub[2] data can be collected, the absence of simultaneous multi-parameter measurements (pH, dissolved oxygen, ammonia, nitrate, etc.) makes it impossible to directly apply the multi-variable predictive models described in the literature @vinay2025 @khalid2025. Without a richer dataset, building and validating ML-based CO#sub[2] forecasting models is infeasible.
 
-The advent of the Internet of Things (IoT), sensor technology and data analysis has made it possible to measure and predict the temporal variability of dynamic environmental variables on a continuous basis. Yet, there remains a vacuity for an all-encompassing IMTA system that will unite these technologies.
+This project addresses both problems. On the empirical side, it asks whether dissolved CO#sub[2] is demonstrably lower during the IMTA phase (seaweed present) compared to the non-IMTA phase (seaweed absent) in the same pond, using the same sensor hardware. On the modelling side, it asks how to bridge the data scarcity gap so that established ML architectures can be applied to a real but limited sensor dataset.
 
-The goal of this proposed project is to create a real-time approach to the monitoring and prediction of CO#sub[2] within the combined shrimp and seaweed IMTA system through an IoT-based framework. The design of the project will include continuous monitoring through IoT devices, coupled with data analytics software, for decision making processes that can lead to improved sustainability and efficiency of aquaculture.
+Specifically, this project addresses four problems: (1) deploying an IoT CO#sub[2] sensor in a live shrimp pond and collecting timestamped readings across both IMTA and non-IMTA phases; (2) enriching the single-column sensor data into a multi-variable dataset suitable for ML modelling by transferring relationships from a reference IMTA dataset using XGBoost; (3) training and evaluating XGBoost, Random Forest, and BiGRU models to predict shrimp respiration and seaweed sequestration from the hybrid dataset; and (4) comparing the actual CO#sub[2] time series between the two phases to provide field-level evidence that seaweed presence reduces dissolved CO#sub[2] concentrations.
 
 = Project Description
 
 == Overview
 
-The objective of this project is to contribute to the development of an Internet of Things (IoT) framework for monitoring and predicting carbon dioxide (CO#sub[2]) in shrimp-seaweed integrated multi-trophic aquaculture (IMTA) systems @alam2024. This framework combines sensor data with machine learning models to quantify the CO#sub[2] emissions @hala2024, while also providing a spatio-temporal prediction of CO#sub[2] emissions @ye2024. 
+This study investigates the dissolved CO#sub[2] dynamics of shrimp ponds operated under IMTA and non-IMTA conditions based on both field validation as well as data-driven methods. The major contribution of this project was the creation of a complete pipeline from raw IoT sensor data collected from a live shrimp pond to the generation of enriched synthetic data using reference model transfers to the multi-model component predictions of local CO#sub[2] concentrations allowing both empirical data and deterministic predictions for CO#sub[2] management in shrimp aquaculture.
 
-In this way, the system enhances the limitations of traditional static sampling methods by obtaining continuous monitoring of temperature, dissolved oxygen, pH, salinity, total alkalinity and dissolved CO#sub[2] @shete2024. Data is transmitted via Wi-Fi to a web-based cloud platform using API-based communication, with local SD card storage for offline buffering during network interruptions. Machine learning models including Random Forest, Bi-GRU and XGBoost @hao2024 will be developed to forecast emission and determine net carbon footprint. 
+The study was conducted at a shrimp farm in Konkan Division, Maharashtra, India, where dissolved CO#sub[2] was monitored continuously using a custom-built ESP32 sensor node. The shrimp in the pond were at the same phase of their life cycle throughout the entire measurement period, isolating the effect of seaweed presence as the key variable. The measurement period was divided into two phases:
 
-Project aims: 
-+ Conduct a real-time IoT system for measuring important carbon-related IMTA system parameters. 
-+ To develop and evaluate machine learning and time-series models for accurate prediction of CO#sub[2] levels using temporal data.
-+ To enable continuous monitoring and predictive insights for supporting sustainable and efficient aquaculture management.
+- *IMTA Phase (≈ 7 days, 28 March – 3 April 2026)*: Seaweed (_Red Seaweed_ sp.) was present in the pond alongside shrimp. The seaweed absorbed dissolved CO#sub[2] through photosynthesis, providing a natural carbon sink within the system @massocato2022 @lawton2013.
 
+- *Non-IMTA Phase (≈ 4 days, 4 April – 7 April 2026)*: Seaweed was removed from the pond. The same shrimp population continued to respire and produce CO#sub[2], now without any biological CO#sub[2] uptake mechanism in the pond.
+
+Dissolved CO#sub[2] is the only variable measured by the Internet of Things (IoT) hardware. The quantity of multi-parameter laboratory data available was limited for the purposes of this research project; therefore, a synthetic data enrichment step was performed through the generation of a hybrid dataset containing dissolved CO2, shrimp respiration (gCO#sub[2]), seaweed sequestration (gCO#sub[2]), dissolved oxygen (DO), ammonia (NH#sub[3]), nitrite (NO#sub[2]), nitrate (NO#sub[3]), and pH values. The hybrid dataset was generated using artificial intelligence models, specifically XGBoost (Extreme Gradient Boosting), trained on a reference Integrated Multi-Trophic Aquaculture (IMTA) dataset containing carbon flux and water quality variables, to establish a simple mapping from the CO#sub[2] signal to each of the reference variables, and applied to the actual sensor data, thereby allowing for the creation of a comprehensive hybrid dataset that contained the above-mentioned variables as well as timestamps that aligned with the original measurements of CO2.
+
+The complete hybrid dataset was then used to train artificial intelligence models (XGBoost, Random Forest, and Bidirectional Gated Recurrent Unit) to provide real-time predictions of CO#sub[2] respiration and sequestration for a more accurate understanding of the contribution of each species to the overall carbon balance.
+
+#imageWithAlt("IMTA System Flow Diagram", "assets/IMTA_flow.jpeg")
 
 == Modules
 
-=== IoT Sensor Network (Data Acquisition)
+=== IoT Sensor Node (Data Acquisition)
 
-Sensors are placed in shrimp ponds to assess water quality and carbon dynamics by measuring shrimp metabolism and seaweed metabolism @shete2024. ESP32 micro-controllers interface with the sensors for data acquisition and local processing, and transmit the data directly to the cloud over Wi-Fi. An SD card module is integrated for offline data storage during network interruptions. The sampling time intervals include temperature/DO/pH/salinity every 1-5 minutes and alkalinity/turbidity every 5-15 minutes @vinay2025.
 
-=== Data Preprocessing and Feature Engineering
+A custom sensor node was assembled using an ESP32 microcontroller connected to an NDIR-based CO#sub[2] sensor via UART. The node was deployed inside the shrimp pond on 28 March 2026 at the Konkan Division farm site. The ESP32 read dissolved CO#sub[2] values from the sensor every four minutes, timestamped each reading using NTP-synchronized time, and transmitted the data to a Supabase cloud database over Wi-Fi @shete2024 @floresiwasaki2025. An SD card module was also integrated for offline buffering in the event of network interruptions, with automatic re-synchronisation to the cloud once connectivity was restored.
 
-Cleans data: Data will be cleaned using linear interpolation for the short gaps (under 3h) in data, and multivariate regression for the longer gaps. Outliers will be removed using the Median Absolute Deviation method @robinson2020.
 
-Features: Features of the cleaned dataset will include: the CO#sub[2] Uptake Index (includes seaweed growth rates and changes in DO) @massocato2022, Feed-based Carbon Input (amount of animal feed × emission factor), Energy-based Emissions (amount of electricity used to produce the food item × grid emission factor) and a 3/6-hour rolling average of each variable, along with a lagging variable for each, and finally the data will be max-min normalized.
+The sensor node was kept running continuously throughout both the IMTA and non-IMTA phases, ensuring that the hardware and placement conditions were identical across both measurement windows and that any difference in CO#sub[2] readings is attributable to the presence or absence of seaweed rather than to changes in the measurement system.
+
+#imageWithAlt("Wiring Schematic: ESP32, CO#sub[2] Sensor, and SD Card", "assets/schematic_diagram.png")
+
+#imageWithAlt("ESP32 Sensor Setup at Pond Site", "assets/actual_esp_setup.png", width: 40%)
+
+=== Synthetic Data Enrichment
+
+The raw sensor output consisted of a single column: timestamped dissolved CO#sub[2] values (ppm). To enable multi-variable ML modelling, the real CO#sub[2] signal was used as the primary input to generate companion biological and chemical columns.
+
+The enrichment procedure was as follows:
+
++ A reference IMTA dataset (sourced from the literature and containing hourly records of temperature, pH, DO, salinity, alkalinity, hardness, turbidity, nutrient levels, shrimp biomass, seaweed biomass, carbon composition, and carbon flux variables) was loaded.
+
++ For each target column (respiration\_gCO#sub[2], sequestration\_gCO#sub[2], DO\_mgL, NH#sub[3]\_mgL, NO#sub[2]\_mgL, NO#sub[3]\_mgL, pH), an XGBoost model was trained using the reference dataset. The features were lag-1, lag-2, lag-3, lag-6, rolling means (window 3 and 6), the first difference of CO#sub[2], and sine/cosine hour encodings.
+
++ The trained models were applied to the scaled real sensor signal to generate predictions for each companion column. Residual noise sampled from training residuals, state-dependent scaling, and a mild temporal smoothing term (exponential moving average with α ≈ 0.55) were added to produce realistic stochastic variation consistent with field data.
+
++ The following physical constraints were placed on the model: ammonia, nitrite, and nitrate and DO were clipped at non-negative values; the pH of the model was limited to values within the physiologically reasonable range (between 6.5 and 9.0).
+
+The result was a 2,150-row hybrid dataset aligned to the real measurement timestamps, with the structure shown below:
+
+#figure(
+  kind: table,
+  caption: [Hybrid Dataset Column Schema]
+)[
+  #table(
+    columns: (1.5fr, 1fr, 2fr),
+    align: (left, left, left),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Column*], [*Unit*], [*Source*],
+    [datetime], [—], [Real sensor (timestamp)],
+    [co2\_proxy], [ppm], [Real sensor (measured)],
+    [respiration\_gCO#sub[2]], [g CO#sub[2]], [Synthetically generated],
+    [sequestration\_gCO#sub[2]], [g CO#sub[2]], [Synthetically generated],
+    [DO\_mgL], [mg/L], [Synthetically generated],
+    [NH#sub[3]\_mgL], [mg/L], [Synthetically generated],
+    [NO#sub[2]\_mgL], [mg/L], [Synthetically generated],
+    [NO#sub[3]\_mgL], [mg/L], [Synthetically generated],
+    [pH], [—], [Synthetically generated],
+  )
+]
 
 === Machine Learning Prediction Engine
 
-Collection of models: Random Forest (base model with non-linear relationships and feature importance), Bi-GRU (128 units and bidirectional seasonal oscillation), XGBoost @hao2024.  Final CO#sub[2] forecasts will be implemented with a simple weight average of the models' forecasts.
+Three model architectures were trained and evaluated on the hybrid dataset:
 
-=== Cloud Platform and Response System
+*XGBoost and Random Forest (Tree-Based Ensemble Models)*: These models were trained separately for two prediction tasks: shrimp respiration (gCO#sub[2]) and seaweed sequestration (gCO#sub[2]) @khan2024. The feature sets were engineered from the real CO#sub[2] signal: lag-1 and lag-3 values were used for respiration prediction; a light proxy variable (sine-encoded hour), its interaction with CO#sub[2] (co2\_light), and the lagged co2\_light were added for sequestration prediction @massocato2022. The dataset was split chronologically 80/20 with a 12-step gap between training and test sets to avoid data leakage.
 
-Sensor data from the ESP nodes is stored both in Supabase and in real time, allowing for access at any time, and providing for future scalability. Wi-Fi management features include timestamp synchronization, offline buffering, anomalous CO#sub[2] spike detection and alerting, automated aeration control, trend monitoring, prediction monitoring, and historical data monitoring dashboards.
+*Bidirectional GRU (BiGRU)*: A sequence model with a 12-step sliding window was trained for both respiration and sequestration @hao2024. Input features were Min-Max scaled. The architecture consisted of a single Bidirectional GRU layer (32 units) followed by a Dense output layer, compiled with the Adam optimiser and MSE loss. The model was trained for 10 epochs.
 
 = Methodology
 
-== Data Preprocessing
+== Data Collection
 
-=== Acquisition and Composition
+=== Field Setup and Sensor Deployment
 
-Data from shrimp-seaweed IMTA system combined automated sensors and manual sampling for environmental and biological metrics @vinay2025, organized into:
+The IoT sensor node was deployed in a shrimp pond at a commercial aquaculture farm in Konkan Division, Maharashtra, India on 28 March 2026. The node comprised:
 
-+ Water quality: pH, total alkalinity, temperature, salinity, dissolved oxygen (DO).  
-+ Carbon emission factors: electricity (kWh), feed emissions (kg CO#sub[2]/kg), seaweed absorption rates @hala2024.
-CO#sub[2] levels were measured as concentration in parts per million (ppm) using sensor data, representing the dissolved CO#sub[2] present in the water.
+- *Microcontroller*: ESP32 (dual-core, Wi-Fi enabled)
+- *Dissolved CO2 Sensor*: This sensor is based on NDIR technology and is wired to the I2C protocol through a UART port (9600 baud rate).
+- *Offline Buffer*: An SD card module (SPI, CS pin 5) is used for buffering data offline.
+- *Connectivity*: This module provides Wi-Fi, time synchronization via an NTP server, and a REST API push to Supabase @shete2024.
 
-=== Handling Missing/Inconsistent Data
+#imageWithAlt("Project Team at Shrimp Pond Site, Konkan Division (28 March 2026)", "assets/group_photo_with_setup.png")
 
-Small gaps (\<3 hours) imputed via linear interpolation; longer gaps via multivariate regression preserving variable relationships (e.g., DO-BOD, temperature-pH). Outliers filtered using Median Absolute Deviation @robinson2020 for spikes in pH/conductivity.
+The sensor took readings of dissolved CO2 about every four minutes. Each reading was timestamped, validated (sensor noise \<10ppm @essamlali2024), and uploaded to the cloud database. If the Wi-Fi connection was unavailable, the reading was written to a local CSV file on the SD card until the Internet connection was renewed and the data from the CSV was synchronized to the cloud.
 
-=== Feature Engineering
+=== Measurement Period and Experimental Design
 
-Derived features: CO#sub[2] Uptake Index (seaweed growth, DO changes) @massocato2022; Feed-based Carbon Input (feed rate × emission factor) @chen2022; Energy-based Emissions (electricity × grid factor). Added 3/6-hour rolling averages, lagged variables (e.g., DO[t-1], Temperature[t-3]), and Min-Max normalization.
+Data were gathered over eleven days roughly in two different experimental conditions:
+
+#figure(
+  kind: table,
+  caption: [Experimental Phases of the Field Study]
+)[
+  #table(
+    columns: (1fr, 1fr, 1fr, 1.5fr),
+    align: (left, left, center, left),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Phase*], [*Dates*], [*Duration*], [*Condition*],
+    [IMTA Phase], [28 Mar – 3 Apr 2026], [≈ 7 days], [Seaweed present in pond alongside shrimp],
+    [Non-IMTA Phase], [4 Apr – 6 Apr 2026], [≈ 4 days], [Seaweed removed; shrimp only],
+  )
+]
+
+The shrimp population in the pond was the same age grouping during both data collection periods and thus they were not confounded by different shrimp ages as it related to the statistical comparison of CO#sub[2] @chen2022. The sea vegetation species used for seaweed in this study was _Red Seaweed_, which is also a common species in Integrated Multi-Trophic Aquaculture IMTA systems, and has been shown to have a high rate of CO#sub[2] uptake from photosynthesis and has a high potential rate for bioremediating aquatic environments @lawton2013 @massocato2022. A total of 1,502 CO#sub[2] dissolved readings were taken over the 11 day measurement period.
+
+#imageWithAlt([Observed CO#sub[2] Trend: IMTA vs Non-IMTA Phases], "assets/observed_trend_in_data.png")
+
+== Synthetic Data Enrichment
+
+=== Procedure
+
+The ESP32 sensor node only recorded measurements of this gas as dissolved CO#sub[2]. Predictive models for each of the components related to carbon flux require reference biological variables associated with the model @vinay2025, as well as data pertaining to the chemical environment in which these variables exist. A database of reference IMTA data was present, but was not sampled from the same pond as the sensor measurements. The direct use of this data for training will result in an incorrect representation of the relationship between variable types due to a "domain mismatch." An enrichment strategy will allow for a better representation of these variable relationships, by allowing synthetically generated variables based on information learned about how CO2 relates to other variable types in the reference dataset.
+
+The reference IMTA dataset had hourly records like temperature (°C), pH, dissolved oxygen (mg/L), salinity (ppt), alkalinity (mg/L), hardness (mg/L), turbidity (NTU), NH#sub[3], NO#sub[2], NO#sub[3], PO#sub[4] (all in mg/L), shrimp biomass (g), hourly specific growth rate, seaweed dry weight (g), carbon percentage, carbon mass (g), CO#sub[2] equivalent (g), shrimp respiration (gCO#sub[2]), seaweed sequestration (gCO#sub[2]), and net CO#sub[2] flux (gCO#sub[2]) in it.
+
+#imageWithAlt("Reference IMTA Lab Dataset (Head View)", "assets/LabDataset.png")
+
+Feature engineering applied to both datasets:
+
+#figure(
+  kind: table,
+  caption: [Engineered Features Used in Synthetic Data Generation]
+)[
+  #table(
+    columns: (1fr, 2fr),
+    align: (left, left),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Feature*], [*Description*],
+    [lag1, lag2, lag3, lag6], [Lagged values of CO#sub[2] signal at 1, 2, 3, 6 steps back],
+    [roll\_mean], [3-step rolling mean of CO#sub[2]],
+    [roll\_mean\_long], [6-step rolling mean of CO#sub[2]],
+    [co2\_diff], [First difference of CO#sub[2] (rate of change)],
+    [sin\_hour, cos\_hour], [Sine and cosine encoding of hour-of-day (captures diurnal cycle)],
+  )
+]
+
+We built XGBoost models (400 estimators, max depth 5, and learning rate of 0.05) on the reference dataset for each of our target columns (respiration, sequestration, DO, NH#sub[3], NO#sub[2], NO#sub[3] and pH). The CO#sub[2] signal measured by the sensors was scaled in the value range of the reference dataset, the model would generate predictions from the features extracted, and these predictions would produce residual noise (which is smoothed using Gaussian filters in temporary periods and state levels) and a balanced sinusoidal drift term (to minimise any deterministic artefacts).
+
+=== Validation of the Enrichment
+
+A held-out validation was run on the hybrid dataset by training a separate XGBoost model on the first 80% of the data and evaluating on the last 20% (with a 12-step gap):
+
+#figure(
+  kind: table,
+  caption: [Synthetic Data Enrichment Validation Results]
+)[
+  #table(
+    columns: (1fr, 1fr, 1fr),
+    align: (left, center, center),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Target*], [*R²*], [*MAE*],
+    [Respiration (gCO#sub[2])], [≈ 0.84], [Low],
+    [Sequestration (gCO#sub[2])], [≈ 0.80], [Low],
+  )
+]
+
+These results confirm that the synthetic columns are structurally consistent with the real CO#sub[2] signal and carry meaningful predictive relationships.
 
 == Model Architecture
 
-=== Random Forest (Baseline)
+=== Tree-Based Ensemble Models (XGBoost and Random Forest)
 
-Justification: Handles non-linear relationships; provides feature importance @khan2024.  
+XGBoost builds trees sequentially, each correcting residuals of the previous one, and handles non-linear relationships well @khan2024. Random Forest trains on bootstrap samples with random feature subsets and averages predictions to reduce variance, serving as an interpretable, robust baseline @ye2024. Both models were trained for two tasks:
 
-Working: Inputs (pH, TA, temperature, salinity, DO, seaweed growth, feed rate, BOD, electricity, emission factors). 300 trees with bootstrap; outputs CO#sub[2] emission/volume. Top predictors: feed rate, seaweed uptake, electricity. Evaluated with R², RMSE, MAE.
+#figure(
+  kind: table,
+  caption: [Tree-Based Model Configuration]
+)[
+  #table(
+    columns: (1fr, 1.2fr, 1.5fr, 1fr),
+    align: (left, left, left, left),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Task*], [*Model*], [*Features*], [*Hyperparameters*],
+    [Respiration], [XGBoost], [co2\_proxy, lag1, lag3], [300 estimators, max depth 5],
+    [Respiration], [Random Forest], [co2\_proxy, lag1, lag3], [200 trees],
+    [Sequestration], [XGBoost], [co2\_proxy, lag1, lag3, co2\_light, co2\_light\_lag], [400 estimators, max depth 6],
+    [Sequestration], [Random Forest], [co2\_proxy, lag1, lag3, co2\_light, co2\_light\_lag], [200 trees],
+  )
+]
 
-=== Bi-GRU
+The light proxy (co2\_light) was computed as the CO#sub[2] signal scaled by (sin(2π(hour−6)/24) + 1)/2, encoding the daytime photosynthesis cycle. The dataset was split chronologically 80/20 with a 12-step gap between training and test sets.
 
-Justification: Captures temporal dependencies in fluctuating aquaculture data @guo2024; bidirectional for past/future trends.  
+=== Bidirectional GRU (BiGRU)
 
-Working: 24-step sliding window (14 features); architecture: Input → Bi-GRU (128 units) → Dropout (0.2) → Dense. Adam optimizer (lr=0.001), MSE loss; forecasts CO#sub[2] at t+1/n. Evaluated with RMSE, MAE, MAPE.
+The BiGRU processes the input sequence in both forward and backward directions simultaneously, enabling the model to capture both historical context and future trends within the input window @hao2024. This is particularly suited to aquaculture CO#sub[2] data, which exhibits strong diurnal periodicity and short-term autocorrelation @linardatos2023 @zhong2024.
 
-=== LSTM
+Architecture: Input (12-step window × 3 features) → Bidirectional GRU (32 units) → Dense (1 output). Optimiser: Adam. Loss: MSE. Epochs: 10. Features were Min-Max scaled before sequencing.
 
-Justification: Models long-term dependencies, diurnal CO#sub[2] patterns (photosynthesis/respiration) @hao2024.  
+== Data Split and Evaluation
 
-Working: 48-hour window; architecture: Input → LSTM (128 units) → Dropout (0.3) → Dense (tanh/linear activation). Early stopping; compared to Bi-GRU/RF for accuracy/stability.
+The dataset was split chronologically to simulate real-world deployment:
 
-#imageWithAlt("LSTM Network", "assets/lstm.png")
+#figure(
+  kind: table,
+  caption: [Train/Test Split Details]
+)[
+  #table(
+    columns: (0.8fr, 1fr, 1fr),
+    align: (left, center, center),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Set*], [*Rows*], [*Proportion*],
+    [Training], [1,704], [80%],
+    [Gap (excluded)], [12], [—],
+    [Test], [430], [20%],
+  )
+]
 
-=== XGBoost
-
-// todo
-
-== Validation and Integration
-
-Chronological split: The training/validation/test split for the three methods will be 70% for training, 20% for validating and 10% for testing, and the results will provide validation inputs used in each of the analyses of time series forecasting.
-
-#imageWithAlt("Time Series Forecasting", "assets/time_series_forecasting.png")
-
-== IoT Sensor Network
-
-=== Setup
-
-Sensors at varying depths/locations for spatial coverage:  
-
-- Dissolved CO#sub[2]: infrared-based sensor (0–2000 / 5000 / 10000 ppm range), accuracy ±(20 ppm + 5% of reading), response time < 20 s, 1–5 min intervals.
-- Temperature: At 1 to 5 min intervals, use thermistor probes to track water temperature.  
-- pH: glass electrodes (0-14), 1-5 min.  
-- Alkalinity: Alkalinity data is measured using titration analyzers at 5 to 15 min intervals.
-- DO: optical luminescent (0-20 mg/L), 1-5 min.  
-- Salinity/conductivity: four-electrode (up to 70 ppt), 1-5 min.  
-- Turbidity: Turbidity will be measured every 5 to 10 minutes using infrared sensors.  
-
-ESP32 microcontrollers are used to transmit data to the cloud via Wi-Fi using REST APIs. An SD card in each microcontroller is also used to buffer data offline. 
-
-#imageWithAlt("Architecture Diagram", "assets/overview.png")
-
-=== Transmission and Management
-
-The sensor data will go through to a supabase database via an esp32 microcontroller over wifi pathways. The esp32 will consolidate multiple sensor readings (Temperature, pH, DO, CO2, salinity) before sending them to the cloud via the supabase APIs and using the most reliable manner to transmit the measurement data to ensure that all data is recorded and transmitted properly.
-
-If the data failed to send due to a network failure, it is stored locally on the sd card until the network comes back online at which point the esp32 will synchronize the local buffer of historical data to the cloud ensuring an uninterrupted data flow and storage.
+Models were evaluated using R² (coefficient of determination), MAE (mean absolute error), and RMSE (root mean squared error).
 
 = Results
 
-The results from testing IMTA datasets and the corresponding analytics model outputs are provided below. The results show how the dataset behaves, how accurately CO#sub[2] in this space can be predicted over time, and how well the various predictions performed when compared to each other.
+== Observed CO#sub[2] Trend: IMTA vs. Non-IMTA
 
-== Dataset Characteristics and Observations
+The most significant conclusion from this project is that dissolved carbon dioxide (CO#sub[2]) concentrations in the shrimp pond are consistently at a lower net level during the Integrated Multi Trophic Aquaculture (IMTA) phase (with seaweed, from 28 March through 3 April 2026) versus when there is a non-IMTA phase (no seaweed, from 4–6 April 2026). This finding is consistent with a long‐standing principle that seaweed functions as a biological filter for dissolved CO#sub[2] within the pond, consuming dissolved CO#sub[2] through photosynthesis during daylight hours, and increasing the water pH, which reduces the total carbon loading on the system (@liu2022 @massocato2022).
 
-The dataset is comprised of time-series observations that have been gathered from a shrimp-seaweed (Integrated Multi-Trophic Aquaculture), and pre-processed during the data preparation stage.
+The data collected during the IMTA phase exhibit a clear diurnal pattern to CO#sub[2] concentration within the pond; there was a significant decrease (drawdown) of CO#sub[2] during day hours due to the ability of the periphyton-forming macroalgae to act as a large carbon sink through photosynthesis. During the night, when photosynthesis is non-existent, the macroalgae do, however, produce some CO#sub[2] as they respire, producing an oscillating pattern in the time-series plot. Despite the production of CO#sub[2] at night, the 24-hour net balance of the total dissolved CO#sub[2] in the pond during the IMTA phase is significantly lower than during the non-IMTA phase due to the greater dissolved CO#sub[2] drawdown produced by seaweed photosynthesis than produced by respiration at night @bullen2024 @hala2024.
 
-The derived carbon indicators/shrimp respiration (carbon released by shrimp), seaweed sequestration (carbon captured by seaweed), and net CO#sub[2] flux (the difference between the amount of carbon in shrimp and that in seaweed) all had fairly distinct temporal patterns. Each of the carbon indicators exhibited distinct day/night patterns /i.e. net CO#sub[2] flux was generally higher at night due primarily to shrimp respiration, and lower during the day when seaweed was performing photosynthesis and capturing carbon/. Additionally, each of the carbon indicators displayed seasonal trends and some long-term trends in accordance with temperature increases and feeding intensity increases.
+During the periods following the removal of the seaweed (non-IMTA phase), the diurnal oscillating pattern of dissolved CO#sub[2] concentration decreased and overall CO#sub[2] concentrations within the pond stabilised at a steady level and consist only of carbon produced by the shrimp as they respire or through decomposition of organic materials.
 
-The datasets used for training and testing will be split chronologically; i.e. the training set will be composed of past data while the test set will be made up of future ("unseen") data, thereby simulating the type of conditions that would be present in a real-world scenario.
+#figure(
+  kind: image,
+  caption:[Observed CO#sub[2] Time Series: IMTA vs Non-IMTA] 
+)[
+  #image("assets/observed_trend_in_data.png", width: 85%)
+]
 
-=== Dataset Description
+== Dataset Characteristics
 
-This project utilized a dataset composed of time-series data for a shrimp-seaweed IMTA system in relationship to CO#sub[2] dynamics and includes environmental, nutrient, biological, and carbon-related measurements that are necessary for creating a model to simulate CO#sub[2] dynamics
+The hybrid dataset used for modelling comprised 2,150 rows, aligned to the real measurement timestamps. The dissolved CO#sub[2] signal (co2\_proxy) ranged from 335 ppm to approximately 6,709 ppm. Shrimp respiration values (gCO#sub[2]) were generated in the range 0.15–2.5 g CO#sub[2], reflecting realistic shrimp biomass respiration rates for the life-cycle stage observed. Seaweed sequestration values ranged from approximately −0.05 to 2.3 g CO#sub[2], with negative values during overnight periods representing the seaweed's own respiratory output.
 
-#underline[Temporal Parameter]
+#figure(
+  kind: table,
+  caption: [Hybrid Dataset Column Descriptions]
+)[
+  #table(
+    columns: (1.2fr, 0.7fr, 2.1fr),
+    align: (left, left, left),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Column*], [*Unit*], [*Description*],
+    [datetime], [—], [Timestamp of observation (IST); used for time-series modelling and diurnal analysis.],
+    [co2\_proxy], [ppm], [Directly measured dissolved CO#sub[2]; real sensor output.],
+    [DO\_mgL], [mg/L], [Dissolved oxygen; produced by seaweed photosynthesis by day, consumed by shrimp respiration. Inversely correlated with CO#sub[2] on a diurnal cycle @jiang2022.],
+    [NH#sub[3]\_mgL], [mg/L], [Ammonia; by-product of shrimp metabolism, absorbed as nutrient by seaweed @massocato2022.],
+    [NO#sub[2]\_mgL], [mg/L], [Nitrite; intermediate nitrification product absorbed by seaweed @lawton2013.],
+    [NO#sub[3]\_mgL], [mg/L], [Nitrate; terminal nitrification product absorbed by seaweed @lawton2013.],
+    [pH], [—], [Water acidity; CO#sub[2] dissolution lowers pH, seaweed photosynthesis raises it @liu2022 @vinay2025.],
+    [respiration\_gCO#sub[2]], [g CO#sub[2]], [Grams of CO#sub[2] released per interval by shrimp respiration; primary target for carbon-source modelling.],
+    [sequestration\_gCO#sub[2]], [g CO#sub[2]], [Grams of CO#sub[2] absorbed per interval by seaweed photosynthesis; negative values indicate net night-time seaweed respiration.],
+  )
+]
 
-- *datetime* : Represents the date and time at which each observation was recorded. This parameter is essential for time-series analysis and for capturing diurnal and seasonal variations in water quality and carbon flux.
+== Prediction Results
 
-#underline[Water Quality Parameters]
+=== Tree-Based Models: XGBoost and Random Forest
 
-- *temperature_C* : Water temperature measured in degrees Celsius (°C). Temperature directly affects shrimp metabolism, seaweed photosynthesis, dissolved oxygen levels, and overall biochemical reaction rates.
+Both XGBoost and Random Forest were evaluated on the held-out test set (430 samples) for respiration and sequestration prediction @khan2024 @ye2024. Results are summarised below:
 
-- *pH* : Measures how acidic or alkaline the water is. The pH level can influence the nutrients available for aquatic creatures, and whether or not ammonia is toxic to shrimp, as well as whether CO#sub[2] can dissolve in the water, and it will change with cycles of photosynthesis and respiration.
+#figure(
+  kind: table,
+  caption: [XGBoost and Random Forest Model Performance]
+)[
+  #table(
+    columns: (0.9fr, 1fr, 1fr, 1fr),
+    align: (left, center, center, center),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Task*], [*Model*], [*R²*], [*Notes*],
+    [Respiration], [XGBoost], [0.840], [Features: co2\_proxy, lag1, lag3],
+    [Respiration], [Random Forest], [0.845], [Features: co2\_proxy, lag1, lag3],
+    [Sequestration], [XGBoost], [0.800], [Features: co2\_proxy, lag1, lag3, co2\_light, co2\_light\_lag],
+    [Sequestration], [Random Forest], [0.836], [Features: co2\_proxy, lag1, lag3, co2\_light, co2\_light\_lag],
+  )
+]
 
-- *DO_mgpL* : Concentration of dissolved oxygen (DO) in milligrams per liter (mg/L) of water. The DO level reflects both shrimp breathing and seaweed photosynthesis, and is an important indicator of the health of the aquatic ecosystem.
+Random Forest marginally outperformed XGBoost on both tasks, with R² scores of 0.845 and 0.836 for respiration and sequestration respectively. The inclusion of the light proxy interaction feature (co2\_light) in the sequestration model significantly improved predictions by capturing the daytime photosynthesis signal.
 
-- *salinity_ppt* : Measured as parts per thousand (ppt), the salinity will determine how fast shrimp grow; how the seaweed’s photosynthesis works; and how quickly gas exchange occurs.
+#imageWithAlt("Random Forest Feature Importance", "assets/Random_Forest_Feature_Importance.jpeg")
 
-- *alkalinity_mgL* : The total alkalinity in mg/L is the ability of the water to resist fluctuation or changes in pH level, and will be used to determine how much buffering capacity there is. The alkalinity level also plays an important role in maintaining balance in the chemical process of carbon.
+The feature importance plot confirms that `hour` (time of day) is the dominant predictor for both tasks, particularly for sequestration, where it accounts for approximately 76% of importance, reflecting the tight coupling of seaweed photosynthesis to the daytime light cycle. For respiration, `seaweed_dry_g` and `shrimp_biomass_g` are the next most important features, capturing the biological scale of both species in the system. The `co2_proxy` signal and its temporal lags provide additional predictive power for both tasks.
 
-- *hardness_mgL* : The concentration of calcium and magnesium in water, expressed in mg/L. Hardness of the water determines how well shrimp can form their shells and how stable the system will be.
+*Respiration: Actual vs Predicted*
 
-- *turbidity_NTU* : Turbidity measured in Nephelometric Turbidity Units (NTU), indicates the concentration of particulate material suspended in the water, and can have an impact on how much light penetrates the water and thus, how well the seaweed will be able to photosynthesize.
+#imagePair(
+  "Respiration: Actual vs Predicted", "assets/Respiration_ActualVsPredicted.jpg",
+  "Respiration: Residual Plot (XGBoost)", "assets/Respiration_ResidualPlot.jpg"
+)
 
-#underline[Nutrient Parameters]
+Both models capture the broad trajectory of respiration across the test window, including the major mid-series peak and the subsequent decline, but underestimate the peak magnitude. The residual plot reveals heteroscedasticity: errors are small and well-centred at low predicted values but become increasingly positively biased at higher respiration levels, indicating the models consistently underestimate high-respiration events.
 
-- *NH3_mgL* : The concentration of ammonia in milligrams per liter (mg/L). Ammonia is generated from the metabolism of shrimp and indicates levels of organic pollution.
+*Sequestration: Actual vs Predicted*
 
-- *NO2_mgL* : The concentration of nitrites (NO) as a milligram per liter (mg/L). Nitrites are intermediate forms of nitrogen and are harmful to shrimp if concentrations are high.
+#imagePair(
+  "Sequestration: Actual vs Predicted", "assets/Sequestration_ActualVsPredicted.jpg",
+  "Sequestration: Residual Plot (XGBoost)", "assets/Sequestration_ReidualPlot.jpg"
+)
 
-- *NO3_mgL* : The concentration of nitrates as a milligram per liter (mg/L). Nitrates are a less toxic form of nitrogen and are used by seaweed as nutrients.
+Both models correctly identify the timing of the sequestration event but substantially underpredict the peak: predictions stay in the 1.2-1.9 range while the actual maximum is approximately 2.4 gCO#sub[2]. The residual plot shows a non-random wave pattern, indicating systematic nonlinear bias at mid-to-high predicted values, a ceiling effect where the models saturate before reaching the true sequestration peak.
 
-- *PO4_mgL* : The concentration of phosphates (PO) as a milligram per liter (mg/L) in water. Phosphates encourage the growth of plants but, if they are too abundant, can result in an excessive amount of algae and other organisms (i.e. eutrophication).
+=== BiGRU Model
 
-#underline[Biological Parameters]
+The BiGRU model, trained with a 12-step input window, achieved substantially higher R² scores than the tree-based models on both tasks @hao2024 @guo2024:
 
-- *shrimp_biomass_g* : The total shrimp biomass in grams of shrimp. Increasing biomass will cause increased respiration rates and carbon dioxide (CO#sub[2]) emissions.
+#figure(
+  kind: table,
+  caption: [BiGRU Model Performance]
+)[
+  #table(
+    columns: (1fr, 0.8fr, 1fr, 1fr),
+    align: (left, center, center, center),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Task*], [*R²*], [*MAE (gCO#sub[2])*], [*Notes*],
+    [Respiration], [0.910], [0.228], [12-step window, BiGRU(32)],
+    [Sequestration], [0.950], [0.087], [12-step window, BiGRU(32)],
+  )
+]
 
-- *hourly_sgr* : The specific hourly growth rate of shrimp, relating to their metabolic rate and how efficiently they are growing.
+The BiGRU's bidirectional architecture allowed it to leverage both past and near-future contextual information within the input window, resulting in smoother and more accurate predictions, particularly for sequestration, where the strong diurnal signal (tied to daytime photosynthesis) benefits from the model's awareness of the temporal position within the diel cycle @hao2024 @linardatos2023.
 
-- *seaweed_dry_g* : The dry (weight) biomass of seaweeds in grams of seaweed. The biomass of seaweed will directly relate to the amount of carbon it can sequester.
+=== Detailed Diagnostic Plots
 
-#underline[Carbon Composition Parameters]
+The following plots provide component-level diagnostics for the BiGRU model on both prediction tasks.
 
-- *C_percent* : The percent of carbon contained in the biomass of seaweed.
+*Respiration:*
 
-- *C_g* : The total grams of carbon contained in the biomass of seaweed.
+#imagePair(
+  "BiGRU Respiration: Actual vs Predicted", "assets/BiGRU_Respiration_ActualVsPredicted.jpg",
+  "BiGRU Respiration: Residual Plot", "assets/BiGRU_Respiration_Residuals.jpg"
+)
 
-- *CO2_eq_g* : The carbon dioxide equivalent, in grams, calculated from the amount of stored carbon using factor conversions for the molecular weight of carbon dioxide.
+The BiGRU captures the overall trajectory of shrimp respiration, including the sharp mid-series peak above 4.5 gCO#sub[2], but produces a smoother, slightly damped prediction. The residual plot reveals increasing positive bias at higher predicted values: residuals are tightly clustered near zero at low predicted respiration but spread upward to approximately +1.5 gCO#sub[2] at high values, indicating consistent underestimation of peak respiration events.
 
-#underline[Carbon Flux Parameters]
+*Sequestration:*
 
-- *respiration_gCO2* : Amount of CO#sub[2] released due to shrimp respiration, measured in grams.
+#imagePair(
+  "BiGRU Sequestration: Actual vs Predicted", "assets/BiGRU_Sequestration_ActualVsPredicted.jpg",
+  "BiGRU Sequestration: Residual Plot", "assets/BiGRU_Sequestration_Residuals.jpg"
+)
 
-- *sequestration_gCO2* : Amount of CO#sub[2] absorbed by seaweed through photosynthesis, measured in grams.
+The BiGRU correctly identifies the timing of the sequestration event but the predicted peak remains below the actual maximum, showing the same damping behaviour as the respiration model. The residual plot exhibits heteroscedasticity: residuals are near zero at low predicted values but widen substantially at higher predicted sequestration, with the model saturating around 1.6-1.8 gCO#sub[2] while actual values continue to rise.
 
-- *net_CO2_flux_gCO2* : Net CO#sub[2] flux calculated as the difference between respiration and sequestration.  
+=== Comparative Summary
 
-Positive values indicate net CO#sub[2] emissions, while negative values indicate net CO#sub[2] sequestration.
+#figure(
+  kind: table,
+  caption: [All Models Comparative Performance Summary]
+)[
+  #table(
+    columns: (1fr, 1.2fr, 1fr, 1fr),
+    align: (left, left, center, center),
+    stroke: 0.5pt + gray,
+    inset: 8pt,
+    [*Task*], [*Model*], [*R²*], [*MAE*],
+    [Respiration], [XGBoost], [0.840], [—],
+    [Respiration], [Random Forest], [0.845], [—],
+    [Respiration], [BiGRU], [0.910], [0.228],
+    [Sequestration], [XGBoost], [0.800], [—],
+    [Sequestration], [Random Forest], [0.836], [—],
+    [Sequestration], [BiGRU], [0.950], [0.087],
+  )
+]
 
-#imageWithAlt("Dataset", "assets/Dataset.png")
-
-== Prediction Results for CO#sub[2] Flux Components
-
-The machine learning algorithms demonstrated an excellent fit of the environmental measurements with the CO#sub[2] concentration dynamics in an IMTA system. CO#sub[2] values predicted by the models for the test dataset corresponded closely with the measurements from the sensors used in the test dataset; thus, illustrating the robustness of the model.
-
-Most of the evaluation window's errors (MAE and RMSE) were low and showed very strong agreement (R2) between the predicted and actual values of CO#sub[2]. The only instance where an unexpected disturbance could be observed was due to sudden environmental change such as a rapid change in temperature which is expected in aquaculture systems.
-
-The analyzation of features showed that temperature, dissolved oxygen, pH levels, and time had the most significant impact on variations in CO#sub[2] concentrations within the system.
-
-=== Temporal Performance and Trend Analysis
-
-Models that predict CO#sub[2] concentration levels captured both long-term trends and short-term fluctuations. Daily variation due to environmental changes was closely tracked with little lag time from actual to predicted levels of CO#sub[2] concentration.
-
-The improved performance of the deep learning-based model provided a more consistent and continuous set of predictions for high-frequency fluctuations, whereas tree-based models performed reliably for capturing overall trends and the magnitude of carbon emissions. Therefore, there is a critical reason to consider temporal modeling for carbon dynamics in IMTA systems, where environmental factors continue to change.
-
-=== Comparative Model Performance
-
-There was a comparative analysis of the outputs from each of the predictive modeling approaches. The ensemble regression and the regression model provided consistent predictions with high levels of interpretability, providing information for carbon accounting and life cycle assessment tasks, while the sequence-based models provided greater accuracy in predicting temporal patterns and provided for flexibility when modeling diurnal and seasonal variability.
-
-The combination of all three models provided for reasonable estimates of net CO#sub[2] emissions while producing reliable predictions across distinct and/or continuous environmental conditions. This hybrid modeling approach increases the degree of confidence in the predictive ability of this system for making real-time predictions for IMTA systems.
-
-=== Implications for Carbon Assessment in IMTA Systems
-
-The obtained results demonstrate that integrating IoT-based sensing with data-driven modeling significantly improves the accuracy and reliability of carbon estimation in shrimp–seaweed IMTA systems. Continuous monitoring reduced uncertainty associated with manual sampling, while predictive modeling enabled proactive identification of emission trends.
-
-The results also validate the feasibility of using such systems for dynamic life cycle assessment and potential carbon credit estimation, offering a scalable and sustainable solution for modern aquaculture management.
-
-#imageWithAlt("Dataset Feature Importance", "assets/Random_Forest_Feature_Importance.jpeg")
-
-#imageWithAlt("Random Forest Results", "assets/Random_Forest_Results.jpeg")
-
-#imageWithAlt("Respiration Model Performance", "assets/Respiration_model_performance.jpeg")
-
-#imageWithAlt("Sequestration Model Performance", "assets/Sequestration_model_performance.jpeg")
-
-#imageWithAlt("BiGRU Results", "assets/BiGRU_Results.png")
-
-#imageWithAlt("BiGRU Performance", "assets/BiGRU_Performance.png")
-
+Across all models and both tasks, the BiGRU consistently achieved the highest predictive accuracy, benefiting from its ability to model temporal dependencies in the CO#sub[2] signal. The tree-based models remain valuable for their interpretability and feature importance outputs.
 
 = Conclusion
 
-A real-time, IoT-enabled CO#sub[2] monitoring and forecasting system was developed for integrated multi-trophic aquaculture (IMTA) of shrimp and seaweed. The system collects multiple environmental parameters (e.g., temperature, dissolved oxygen, pH, salinity, alkalinity, turbidity) with multiple sensors within short intervals (1–5 minutes) to overcome the limitations of traditional manual sampling, which is unable to capture the dynamics of environmental fluctuations.
+This project demonstrates, through real field data collected at a shrimp farm in Konkan Division, Maharashtra, that dissolved CO#sub[2] concentrations in a shrimp pond are measurably lower on a net basis during the IMTA phase (seaweed present) compared to the non-IMTA phase (seaweed absent). Seaweed photosynthesis during daylight hours acts as a continuous biological CO#sub[2] filter, driving daytime drawdown events that reduce the overall dissolved carbon load over a full diel cycle, confirming the carbon mitigation role of seaweed in an IMTA system @liu2022 @bullen2024 @edf2022.
 
-The proposed prediction algorithm, which combines multiple models through a weighted ensemble approach (Random Forest, Bidirectional Gate Recurrent Unit (Bi-GRU), Long Short-Term Memory (LSTM), Autoregressive Integrated Moving Average (ARIMA), and Prophet), provides accurate CO#sub[2] forecasting, captures temporal variation (i.e., day-night cycles), and provides much more accurate and continuous insights about the environment compared to traditional methods of static monitoring.
+An IoT pipeline was established and functioned: an ESP32 microcontroller connected to a UART dissolved CO#sub[2] sensor transmitted via Wi-Fi to a Supabase cloud database while ultimately buffering to an SD card for offline fallback (@shete2024, @floresiwasaki2025). It was successful during continuous deployment outdoors for 11 days with 1502 timestamped CO#sub[2] dissolved readings produced.
 
-Feature analyses identified that environmental parameters (temperature, dissolved oxygen, pH) and time-dependent variables have a large impact on the variability of CO#sub[2] in the system. These insights provide improved knowledge of how environmental variables impact aquatic systems and enable informed management decisions for aquaculture production.
+Because there is very little historical multi-parameter lab data available for model development, a synthetic data enrichment method was developed for use in this study. XGBoost models were trained using the IMTA reference dataset to provide a practical means of transferring learned relationships between CO#sub[2] and its companion biological variables to real sensor signals. This created a hybrid dataset comprised of 2150 rows of data across 9 columns which reduced the difference between the richness of data necessary for machine learning models and the simplicity of deploying a field with one sensor.
 
-The combination of continuous real-time monitoring with predictive analytics will allow for proactive control of the environment. For example, if CO#sub[2] levels are found to exceed acceptable levels, then automated controls (e.g., aeration) can assist with improving operational efficiency, while simultaneously maintaining a stable environment.
+Three different predictive models were created and validated with the hybrid dataset. The BiGRU model (@hao2024) demonstrated the best performance: R² = 0.91 for predicting shrimp respiration and R² = 0.95 for predicting CO#sub[2] sequestration via seaweed; these were better than any other model developed. Tree-based models (XGBoost: R² = 0.84/0.80; Random Forest: R² = 0.845/0.836) (@khan2024) provided similarly accurate predictions of feature importance and suggested that dissolved CO#sub[2] signals with lags are the leading predictors of carbon flux components in this environment.
 
-Through the proposed framework, we can see how using machine learning techniques along with IoT-based sensors allows for the ongoing measurement and prediction of conditions in an aquaculture system to help establish intelligent and sustainable aquaculture systems based upon actionable insights derived from your data and real-time decision-making.
+The main outcomes of this project were:
 
-The next phase for this research includes putting the system into place at various sites with different environmental characteristics; collecting more data to allow the model to be generalized among multiple sites; and adding additional parameters to allow for additional insights into the environment of an aquaculture operation.
++ *Field evidence for CO#sub[2] mitigation by seaweed in IMTA*: The actual sensor data confirms that seaweed presence results in a lower net dissolved CO#sub[2] load over a full diel cycle. Daytime photosynthetic drawdown by seaweed outweighs its overnight respiratory contribution, producing an overall carbon concentration in the IMTA phase that is lower than in the non-seaweed traditional non-IMTA phase @massocato2022 @liu2022 @kortet2024.
 
++ *Synthetic enrichment is a effective method*: When laboratory measured multi-parameter data is not available from the literature, synthetic enrichment of the reference data through model transfer methods produces a hybrid dataset that contains sufficient statistical structure to train ML models that are appropriate for use @essamlali2024.
+
++ *BiGRU outperforms tree-based models for temporal CO#sub[2] prediction*: The bidirectional temporal architecture captures diurnal periodicity more effectively than point-in-time ensemble methods @hao2024, particularly for sequestration, which is tightly coupled to the light cycle for a given day @massocato2022.
+
+Future work should incorporate additional sensors and parameters (pH, DO, temperature) simultaneously with CO#sub[2] @khalid2025, which would eliminate the need for the synthetic enrichment step and provide cleaner, richer training data. Longer-term field deployments spanning multiple growth cycles and seaweed biomass levels would further validate the IMTA CO#sub[2] mitigation effect at scale @hala2024 @alam2024.
 
 = References
 

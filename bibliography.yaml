@@ -197,3 +197,84 @@ edf2022:
   publisher: Environmental Defense Fund
   url: "https://www.edf.org/sites/default/files/2022-10/Carbon%20Sequestration%20by%20Seaweed.pdf"
   genre: White Paper
+
+khalid2025:
+  type: Article
+  title: "Intelligent Prediction and Continuous Monitoring of Water Quality in Aquaculture: Integration of Machine Learning and Internet of Things for Sustainable Management"
+  author: ["Baena-Navarro, R.", "Carriazo-Regino, Y.", "Torres-Hoyos, F.", "Pinedo-López, J."]
+  date: 2025-01
+  serial-number:
+    doi: "10.3390/w17010082"
+  page-range: 82
+  parent:
+    type: Periodical
+    title: Water
+    volume: 17
+    issue: 1
+
+essamlali2024:
+  type: Article
+  title: "Advances in Machine Learning and IoT for Water Quality Monitoring: A Comprehensive Review"
+  author: ["Essamlali, I.", "Nhaila, H.", "El Khaili, M."]
+  date: 2024-03
+  serial-number:
+    doi: "10.1016/j.heliyon.2024.e27920"
+  page-range: e27920
+  parent:
+    type: Periodical
+    title: Heliyon
+    volume: 10
+    issue: 6
+
+floresiwasaki2025:
+  type: Article
+  title: "Internet of Things (IoT) Sensors for Water Quality Monitoring in Aquaculture Systems: A Systematic Review and Bibliometric Analysis"
+  author: ["Flores-Iwasaki, M.", "Guadalupe, G. A.", "Pachas-Caycho, M.", "Chapa-Gonza, S.", "Mori-Zabarburú, R. C.", "Guerrero-Abad, J. C."]
+  date: 2025-03
+  serial-number:
+    doi: "10.3390/agriengineering7030078"
+  page-range: 78
+  parent:
+    type: Periodical
+    title: AgriEngineering
+    volume: 7
+    issue: 3
+
+linardatos2023:
+  type: Article
+  title: "CO2 Concentration Forecasting in Smart Cities Using a Hybrid ARIMA–TFT Model on Multivariate Time Series IoT Data"
+  author: ["Linardatos, P.", "Papastefanopoulos, V.", "Panagiotakopoulos, T.", "Kotsiantis, S."]
+  date: 2023
+  serial-number:
+    doi: "10.1038/s41598-023-42346-0"
+  parent:
+    type: Periodical
+    title: Scientific Reports
+    volume: 13
+    issue: 1
+
+zhong2024:
+  type: Article
+  title: "MGGTSP-CAT: Integrating Temporal Convolution and LSTM for Multi-Scale Greenhouse Gas Time Series Prediction via Cross-Attention Mechanism"
+  author: ["Zhong, C.", "Zheng, Z."]
+  date: 2024
+  serial-number:
+    doi: "10.1002/adts.202400527"
+  parent:
+    type: Periodical
+    title: Advanced Theory and Simulations
+    volume: 7
+    issue: 11
+
+bullen2024:
+  type: Article
+  title: The Potential Climate Benefits of Seaweed Farming in Temperate Waters
+  author: ["Bullen, C. D.", "Driscoll, J.", "Burt, J.", "Stephens, T.", "Hessing-Lewis, M.", "Gregr, E. J."]
+  date: 2024
+  serial-number:
+    doi: "10.1038/s41598-024-65408-3"
+  parent:
+    type: Periodical
+    title: Scientific Reports
+    volume: 14
+    issue: 1
