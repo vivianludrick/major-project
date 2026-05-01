@@ -1,6 +1,18 @@
 #set page(
   paper: "a4",
   margin: (top: 1.2in, bottom: 1in, left: 1in, right: 1in),
+// fill: rgb("#f0f0f0"), 
+//   // 2. Place a white rectangle in the "foreground" of the background layer
+//   background: {
+//     place(
+//       center + horizon,
+//       rect(
+//         fill: white,
+//         width: 100% - (1in + 1in), // Total width minus left/right margins
+//         height: 100% - (1in + 1in), // Total height minus top/bottom margins
+//       )
+//     )
+//   }
 )
 
 #set par(
@@ -122,18 +134,17 @@ str(counter(heading).get().at(0)) + "." + str(num)
 
 // Starts here
 
+#set text(size: 14pt)
+#set par(leading: 0.6em)
 #align(center)[
 
-  #text(size: 18pt, weight: "bold")[
+  #text(size: 24pt, weight: "bold")[
 Data-Driven CO#sub[2] Monitoring and Prediction\ in an IoT-Based Shrimp–Seaweed Integrated\ Multi-Trophic Aquaculture System
   ]
 
   #v(0.5em)
-
   A project report submitted in partial fulfillment\
   of the requirements for the degree of
-
-  #v(0.5em)
 
   #text(size: 15pt, weight: "bold")[
     Bachelor of Engineering\
@@ -141,11 +152,7 @@ Data-Driven CO#sub[2] Monitoring and Prediction\ in an IoT-Based Shrimp–Seawee
     Computer Engineering
   ]
 
-  #v(0.5em)
-
   by
-
-  #v(0.5em)
 
   #text(weight: "bold")[
     Mark Lopes (9913)\
@@ -154,26 +161,21 @@ Data-Driven CO#sub[2] Monitoring and Prediction\ in an IoT-Based Shrimp–Seawee
     Vivian Ludrick (9914)
   ]
 
-  #v(0.5em)
+  #v(0.6em)
 
-  Under the guidance of\
+  Under the guidance of
+
+  #v(0em)
+
   #text(weight: "bold")[#guide.name]\
   #text(weight: "bold")[#guide.designation]
 
-  #v(0.5em)
+  #image("assets/clg_logo.png", width: 30%)
 
-  #image("assets/clg_logo.png", width: 25%)
-
-  #v(0.5em)
-
-  #text(size: 12pt)[
-    DEPARTMENT OF COMPUTER ENGINEERING
-  ]
-
-  #v(0.5em)
+  DEPARTMENT OF COMPUTER ENGINEERING
 
   #text(weight: "bold")[
-    Fr. Conceicao Rodrigues College of Engineering, Bandra (W), Mumbai - 400050
+    Fr. Conceicao Rodrigues College of Engineering,\ Bandra (W), Mumbai - 400050
   ]
 
   #text()[
@@ -182,6 +184,7 @@ Data-Driven CO#sub[2] Monitoring and Prediction\ in an IoT-Based Shrimp–Seawee
 ]
 ]
 
+#set text(size: 12pt)
 #pagebreak()
 
 #set page(
@@ -302,11 +305,7 @@ Date:
 
 #addPageTitle("Abstract")
 
-Shrimp aquaculture accumulates dissolved CO#sub[2] through continuous shrimp respiration and organic waste decomposition. Integrated Multi-Trophic Aquaculture (IMTA) mitigates this by co-cultivating seaweed alongside shrimp. The seaweed absorbs dissolved CO#sub[2] through photosynthesis during daylight hours and produces dissolved oxygen as a by-product, functioning as a natural carbon sink. Over a full diel cycle, photosynthetic drawdown outweighs overnight seaweed respiration, resulting in a net reduction in dissolved CO#sub[2] compared to a seaweed-absent system.
-
-This project validates this effect through real field measurements at a shrimp farm in Konkan Division, Maharashtra, India. A custom ESP32-based IoT sensor node recorded about 2,150 dissolved CO#sub[2] readings over eleven days (28 March - 7 April 2026), spanning an IMTA phase (approx. seven days, _Red Seaweed_ sp. present) and a non-IMTA phase (approx. four days, seaweed removed). Field data confirms that net dissolved CO#sub[2] is measurably lower during the IMTA phase, providing empirical evidence for the carbon mitigation effect of IMTA in Indian pond aquaculture.
-
-Since the sensor measured only CO#sub[2], XGBoost models trained on a reference IMTA dataset were used to synthetically generate companion variables (respiration, sequestration, DO, ammonia, nitrite, nitrate, pH), producing about 2,150-row hybrid dataset. Three models were then trained on this data using a chronological 80/20 split: XGBoost (R#super[2] = 0.84/0.80), Random Forest (R#super[2] = 0.845/0.836), and a Bidirectional GRU (R#super[2] = 0.91/0.95) for respiration and sequestration respectively. The BiGRU achieved the strongest performance by capturing temporal dependencies in the diurnal CO#sub[2] cycle, demonstrating the viability of data-driven carbon forecasting from a single-sensor deployment.
+Shrimp aquaculture accumulates dissolved CO#sub[2] through continuous shrimp respiration and organic waste decomposition. Integrated Multi-Trophic Aquaculture (IMTA) mitigates this by co-cultivating seaweed alongside shrimp. The seaweed absorbs dissolved CO#sub[2] through photosynthesis during daylight hours and produces dissolved oxygen as a by-product, functioning as a natural carbon sink. Over a full diel cycle, photosynthetic drawdown outweighs overnight seaweed respiration, resulting in a net reduction in dissolved CO#sub[2] compared to a seaweed-absent system. This project validates this effect through real field measurements at a shrimp farm in Konkan Division, Maharashtra, India. A custom ESP32-based IoT sensor node recorded about 2,150 dissolved CO#sub[2] readings over eleven days (28 March - 7 April 2026), spanning an IMTA phase (approx. seven days, Red Seaweed sp. present) and a non-IMTA phase (approx. four days, seaweed removed). Field data confirms that net dissolved CO#sub[2] is measurably lower during the IMTA phase, providing empirical evidence for the carbon mitigation effect of IMTA in Indian pond aquaculture. CO#sub[2] data was augmented into a 2,150-row IMTA dataset using XGBoost-generated variables, and models (XGBoost, Random Forest, BiGRU) were trained with an 80/20 split, with BiGRU achieving the best performance by capturing temporal CO2 patterns.
 
 #pagebreak()
 
@@ -420,106 +419,82 @@ The objectives of the project are:
 #set par(leading: 0.8em)
 
 #table(
-  columns: (0.3fr, 1.25fr, 1fr, 1fr, 1.5fr),
+  columns: (0.2fr, 1fr, 1fr, 1.2fr, 1.6fr),
   align: (center, left, left, left, left),
   stroke: 0.5pt + gray,
-  inset: 8pt,
+  inset: 6pt,
 
-  [*Sr. No.*],
-  [*Paper*], 
-  [*Key Focus*], 
-  [*Methodology Used*], 
-  [*Key Findings Relevant to The Project*],
+  [*No.*], [*Paper*], [*Key Focus*], [*Methodology*], [*Key Findings*],
 
   [1],
-  [Y. Liu et al., "Effects of shellfish and macro-algae IMTA in North China on the environment, inorganic carbon system, organic carbon system, and sea-air CO#sub[2] fluxes," Frontiers in Marine Science, vol. 9, p. 864306, Apr. 2022 @liu2022],
-  [Effects of shellfish-macroalgae IMTA on carbon systems and CO#sub[2] fluxes],
-  [- 4 seasonal field surveys (2019)
-- Parameters: DO, pH, temp, salinity, TA, DIC, DOC, POC, pCO#sub[2], CO#sub[2]
-- Ocean-air CO#sub[2] flux: F = k × αs × ΔpCO#sub[2]
-- ANOVA & Pearson correlation],
-[- Macro-algae zones lead to increased pH/DO and reduced pCO#sub[2]
-- Most zones acted as CO#sub[2] sinks except shellfish in summer
-- DIC/pCO#sub[2] highest in shellfish zones, lowest in macro-algae zones
-- Water temperature & DIC are key CO#sub[2] flux factors
-- IMTA mitigates ocean acidification],
+  [Y. Liu et al. (2022) @liu2022],
+  [Shellfish-algae IMTA & CO#sub[2] flux],
+  [- Seasonal surveys
+- pCO#sub[2], pH, DIC
+- ANOVA/Pearson],
+  [- Algae zones: higher pH, lower pCO#sub[2]
+- IMTA acts as a CO#sub[2] sink
+- Mitigates ocean acidification],
 
   [2],
-  [M. M. Alam et al., "Potential of integrated multitrophic aquaculture to make prawn farming sustainable in Bangladesh," Frontiers in Sustainable Food Systems, vol. 8, p. 1412919, Oct. 2024 @alam2024],
-  [IMTA potential for reducing GHG in prawn farming],
-  [- Systematic review: 112 articles (2000 - 2024)
-- PRISMA framework
-- Economic viability & bioremediation analysis],
-  [- Conventional prawn farms produce 18.8 kg CO#sub[2]eq/MT vs 3.1kg (China shrimp)
-- Bivalves/seaweeds sequester CO#sub[2] as blue carbon sinks
-- Global mollusks sequestered 0.97--1.93 million ton C/year
-- IMTA shows 24% higher net profit than monoculture
-- Feed & energy are major carbon sources],
+  [M. M. Alam et al. (2024) @alam2024],
+  [Sustainable prawn farming (Bangladesh)],
+  [- PRISMA review
+- 112 articles
+- Econ analysis],
+  [- Conventional: 18.8kg CO#sub[2]/MT; IMTA: 3.1kg
+- Bivalve/seaweed as blue carbon sinks
+- 24% higher profit than monoculture],
 
   [3],
-  [S. Ye, "Analysis of influencing factors of carbon emissions from China's marine fishery energy consumption under different development scenarios," Frontiers in Marine Science, vol. 11, p. 1377215, Mar. 2024 @ye2024],
-  [Carbon emission factors and prediction for marine fishery],
-  [- Carbon accounting (2006 - 2020): Sources - Sinks
-- PSO-BIGRU machine learning
-- Random Forest for factor importance],
-  [- 17% emission reduction achieved from 4.72 to 3.90 million tons
-- Carbon sinks are dominant reduction factor
-- PSO-BIGRU gives best predictions (MAE: 1.251)
-- Key predictors: carbon sinks, per capita income, fishery population],
+  [S. Ye (2024) @ye2024],
+  [Marine fishery carbon accounting],
+  [- PSO-BIGRU ML
+- Random Forest
+- 2006-2020 data],
+  [- 17% emission reduction achieved
+- Carbon sinks are primary drivers
+- ML model (MAE: 1.251) for prediction],
 
   [4],
-  [M. T. Vinay, K. T. Veeramanju, and B. R. Sreenivasa, "Multivariate analysis of water quality parameters for sustainable prawn farming," South Eastern European Journal of Public Health, vol. 26, no. suppl.2, pp. 3707–3719, 2025 @vinay2025],
-  [Multivariate analysis for predicting water quality effects on prawn health],
-  [- 3 scenario predictions (2021 - 2030)
-- PCA: 14 to 9 components (90% variance)
-- SPA feature selection (10 key features)
-- ML: XGBoost, Random Forest, SVM
-- Dataset: 4,300 samples, 15 parameters],
-  [- 6% sink growth rate most effective
-- PCA + Random Forest gives 93.26% accuracy
-- Key parameters: pH, CO#sub[2], Ca, hardness, plankton, phosphor, temp, DO, total alkalinity, NH#sub[3]
-- DO/BOD inverse relationship validated
-- pH and CO#sub[2] negatively correlated
-- Real-time monitoring improves survival rates],
+  [M. T. Vinay et al. (2025) @vinay2025],
+  [Water quality & prawn health],
+  [- PCA (14 to 9 comp.)
+- XGBoost, RF, SVM
+- 4,300 samples],
+  [- PCA+RF: 93.26% accuracy
+- pH & CO#sub[2] negatively correlated
+- Real-time monitoring boosts survival],
 
   [5],
-  [Y. Jiang and F. Yan, "Aquaculture prediction model based on improved water quality parameter data prediction algorithm under the background of big data," Journal of Applied Mathematics, vol. 2022 @jiang2022],
-  [DO prediction using big data and improved algorithm],
-  [- PCA for feature extraction
-- PCA-BP neural network
-- GA optimization (GPCA-BP)
-- Focus on Dissolved Oxygen (DO) as critical indicator],
-  [- GPCA-BP showed best DO prediction accuracy
-- Lowest MAE error & best convergence
-- DO is most critical aquaculture parameter
-- Big data enables dynamic monitoring
-- Model supports real-time prediction systems],
+  [Y. Jiang et al. (2022) @jiang2022],
+  [DO prediction using Big Data],
+  [- PCA feature extraction
+- GA-optimized BPNN
+- Dynamic monitoring],
+  [- GPCA-BP model: best accuracy/convergence
+- DO is the most critical parameter
+- Enables real-time predictive systems],
 
   [6],
-  [A. F. Hala et al., "Life cycle assessment of integrated multi-trophic aquaculture: A review on methodology and challenges for its sustainability evaluation," Aquaculture, vol. 565, p. 741035, Sep. 2024 @hala2024],
-  [LCA in IMTA for carbon reduction],
-  [- Review of 29 LCA studies (2009 – 2022)
-- Analysis of fed (shrimp) and extractive (seaweed) systems
-- Cradle-to-farm boundary comparisons
-- Methodological challenges assessment],
-  [- IMTA cuts impacts 20–50% vs. monocultures
-- Seaweed sequesters 10–30% of CO#sub[2] emissions
-- Hotspots: feed (40–60%), energy (20–30%)
-- Supports real-time dynamic LCA for carbon credits],
+  [A. F. Hala et al. (2024) @hala2024],
+  [LCA in IMTA sustainability],
+  [- 29 LCA studies
+- Shrimp/Seaweed systems
+- Cradle-to-farm],
+  [- IMTA cuts impacts by 20–50%
+- Seaweed sequesters 10–30% of CO#sub[2]
+- Feed (40-60%) is main carbon hotspot],
 
   [7],
-  [H. Guo, "Intelligent water quality prediction system with a hybrid CNN–LSTM model," Water Practice and Technology, vol. 19, no. 11, pp. 4538–4551, Nov. 2024. @guo2024],
-  [Aquaculture carbon strategies with IMTA],
-  [- Carbon accounting methods review
-- Shrimp-seaweed case studies
-- IMTA vs. monoculture scenario modeling
-- LCA integration with operational data
-- Sequestration sensitivity analysis],
-  [- IMTA reduces shrimp footprints 15–35% via seaweed
-- Net emissions: 2.5–5 kg CO#sub[2]eq/MT
-- Biofloc/renewables cut energy CO#sub[2] 25%
-- Carbon credits via 0.5–1.5 t C/ha/year sequestration
-- Predictive tools aid footprint optimization],
+  [H. Guo (2024) @guo2024],
+  [Hybrid CNN–LSTM for water quality],
+  [- CNN-LSTM modeling
+- Scenario analysis
+- Sequestration sensitivity],
+  [- IMTA reduces shrimp footprint 15–35%
+- Carbon credits: 0.5–1.5 t C/ha/year
+- Biofloc/renewables cut energy CO#sub[2] by 25%],
 )
 
 #set par(leading: line_spacing, spacing: paragraph_spacing)
